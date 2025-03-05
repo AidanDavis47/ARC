@@ -2,7 +2,7 @@
 //  ContentView.swift
 //  ARC
 //
-//  Created by Sarah Remy on 3/4/25.
+//  Created by Aidan Davis and Derek Jolstead on 3/4/25.
 //
 
 import SwiftUI
