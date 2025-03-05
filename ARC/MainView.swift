@@ -11,12 +11,15 @@ import RealityKit
 struct MainView : View {
 
     var body: some View {
-        NavigationStack {
-            List{
-                NavigationLink("Screen1") {CardView(screen: .sampleData[0])}
+        NavigationView {
+            NavigationLink(destination: SecondView()) {
+                Text("Second Screen")
             }
-            .navigationTitle("Screens")
         }
+
+
+        
+        
         
         /* this whole commented chunk is a template for the ar aspect, just keeping it around until we figure out how to switch screen modes
         RealityView { content in
