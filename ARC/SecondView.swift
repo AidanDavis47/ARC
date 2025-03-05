@@ -10,6 +10,9 @@ import SwiftUI
 struct SecondView : View {
     var body: some View {
         Text("SECOND SCREEN")
+            .navigationBarBackButtonHidden(true)
+            .navigationBarHidden(true)
+        
     }
 }
 
