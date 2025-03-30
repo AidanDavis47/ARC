@@ -7,22 +7,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "C42178DC-6E97-4773-85E7-5E06BCC7A8A1"
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "ARC/MainView.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "66"
-            endingLineNumber = "66"
-            landmarkName = "MainView"
-            landmarkType = "14">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "D5F39772-FED2-497F-A212-A7EC91F1EAC6"
             shouldBeEnabled = "No"
             ignoreCount = "0"
@@ -30,8 +14,8 @@
             filePath = "ARC/MainView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "72"
-            endingLineNumber = "72"
+            startingLineNumber = "85"
+            endingLineNumber = "85"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -46,8 +30,8 @@
             filePath = "ARC/MainView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "70"
-            endingLineNumber = "70"
+            startingLineNumber = "83"
+            endingLineNumber = "83"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -62,8 +46,8 @@
             filePath = "ARC/MainView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "74"
-            endingLineNumber = "74"
+            startingLineNumber = "88"
+            endingLineNumber = "88"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
@@ -78,8 +62,8 @@
             filePath = "ARC/MainView.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "77"
-            endingLineNumber = "77"
+            startingLineNumber = "91"
+            endingLineNumber = "91"
             landmarkName = "body"
             landmarkType = "24">
          </BreakpointContent>
