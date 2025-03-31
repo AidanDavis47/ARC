@@ -42,7 +42,7 @@ var coordinate = 0.800 //just a place holder for the coordinate variable, may be
 
 
 
-
+//constructor for the main view
 struct MainView : View{
     func getLocation(){ //turns out have to declare this within the struct or a class, did not want to make an entirely new class just yet
         let locManager = CLLocationManager() //create a location manager var
@@ -102,10 +102,10 @@ struct MainView : View{
                     //self.onAppear(){locationManager.checkLocationAuthorization()}
                     Text("TEST") //this is mainly being used to debug the gps location junk
                     
-                    
-                    NavigationLink(destination: ArView()){
-                        Text("AR Screen")
-                    }
+                    //current bug where i am unable to actually move to the screen, maybe because it is set as a navigation link, might want to just make a button that replaces this view with the ar view stuff, will want to ask pete
+                    //NavigationLink(destination: ArView()){
+                        //Text("AR Screen")
+                    //}
                     
                     
                 }
