@@ -7,6 +7,7 @@
 
 import SwiftUI
 import RealityKit
+import ARKit
 import CoreLocation // need this for location tracking stuff
 import CoreLocationUI
 
@@ -20,10 +21,63 @@ import CoreLocationUI
 
 
 
+//had help from chat gpt for learning the syntax and how to actually pull coordinates
 
-
-//global var stuff
-var coordinate = 0.800 //just a place holder for the coordinate variable, may be needed may not be needed
+class GPSGrabber:NSObject, ObservableObject, CLLocationManagerDelegate{
+    
+    private var locManager = CLLocationManager() //creating a location manager
+    @Published var curLoc: CLLocation? //create a var to store the current location
+    @Published var coord: CLLocationDegrees = 0.0 //used for storing the coordinate we want
+    
+    //modify the initlizatoin function
+    override init(){
+        super.init()
+        
+        locManager.delegate = self
+        locManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        locManager.requestWhenInUseAuthorization() //asks the user for authrorizatoin
+        locManager.startUpdatingLocation() //starts keep track of the location
+        
+    }
+    
+    
+    //now an actual function for manager the location
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations loc: [CLLocation]){
+        if let location = loc.last { //gets the most recent location
+            curLoc = location
+            coord = location.coordinate.latitude
+        }
+    }
+    
+    
+    //function for dealing with errors
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error){
+        print("Location error: \(error.localizedDescription)")
+    }
+    
+    //function for managing when authorization changes
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager){
+        switch manager.authorizationStatus{
+        case .authorizedWhenInUse, .authorizedAlways:
+            manager.startUpdatingLocation()
+        case .denied, .restricted:
+            print("Acess Denied")
+        case .notDetermined:
+            print("not determined")
+            break;
+        default:
+            break;
+        }
+    }
+    
+    
+    //now the function to get the location
+    func getLoc() -> CLLocationDegrees{
+        locManager.requestLocation()
+        return (locManager.location?.coordinate.latitude)!
+    }
+    
+}
 
 
 
@@ -42,11 +96,20 @@ var coordinate = 0.800 //just a place holder for the coordinate variable, may be
 
 
 
+
+
 //constructor for the main view
 struct MainView : View{
+    
+    
+    
+    
+    
+    
+    /* old location getting function turns out i want to make a class for this stuff
     func getLocation(){ //turns out have to declare this within the struct or a class, did not want to make an entirely new class just yet
         let locManager = CLLocationManager() //create a location manager var
-       
+        
         locManager.desiredAccuracy = kCLLocationAccuracyHundredMeters //try to get the best accuracy at the moment
         locManager.requestWhenInUseAuthorization() //requesting authorization
         locManager.requestAlwaysAuthorization()
@@ -70,49 +133,53 @@ struct MainView : View{
         if locManager.location?.coordinate == nil { //this if statement does not catch it still goes infinite and then crashes
             getLocation()
         }
-         
-         
-         
+        
+        
+        
     }
+     */
     
     //so i think it is because the value is nil because it takes awhile to get location so proabably want an if statement?
     
+    @StateObject private var locationGrabber = GPSGrabber()
     
-   
+    
     
     var body: some View {
         
-   
+        
         
         
         
         //if statment might work, pete said it might take a while for it to actually appear
         
         
-        Text("TEST MAIN SCREEN")
-        Button{
-            getLocation()
-        } label: {
-            Text("Get Location")
-        }
-        Text("\(coordinate)")
-            NavigationView {
+            Text("TEST MAIN SCREEN")
+            Text("Lat: \(locationGrabber.coord)")
                 
-                NavigationLink(destination: SecondView()) {
-                    //self.onAppear(){locationManager.checkLocationAuthorization()}
-                    Text("TEST") //this is mainly being used to debug the gps location junk
+               
+            
+            NavigationView {
+                VStack{
                     
-                    //current bug where i am unable to actually move to the screen, maybe because it is set as a navigation link, might want to just make a button that replaces this view with the ar view stuff, will want to ask pete
-                    //NavigationLink(destination: ArView()){
-                        //Text("AR Screen")
-                    //}
+                    NavigationLink(destination: SecondView()) {
+                        //self.onAppear(){locationManager.checkLocationAuthorization()}
+                        Text("TEST") //this is mainly being used to debug the gps location junk
+                        
+                        //current bug where i am unable to actually move to the screen, maybe because it is set as a navigation link, might want to just make a button that replaces this view with the ar view stuff, will want to ask pete
+                        NavigationLink(destination: ArView()){
+                            Text("AR Screen")
+                        }
+                        
+                        
+                    }
                     
                     
                 }
-                
-                
             }
-            
+        
+    }
+}
             
             
             
@@ -142,14 +209,14 @@ struct MainView : View{
             //.edgesIgnoringSafeArea(.all)
             
             //stuff from xcode tutorial provided by apple yay :)
-            .padding()
+            //.padding()
         
-    }
+    
 
-}
+
 
 #Preview {
-    MainView()
+    
     
 }
 

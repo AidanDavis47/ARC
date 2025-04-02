@@ -6,8 +6,11 @@
 //
 
 import SwiftUI
+import RealityKit
+import ARKit
 
 struct SecondView : View {
+    @State var test: ModelEntity?
     var body: some View {
         Text("SECOND SCREEN")
             .navigationBarBackButtonHidden(true)
