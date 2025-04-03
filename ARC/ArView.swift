@@ -24,8 +24,9 @@ import ARKit
 // Custom UIViewRepresentable for RealityKit to add gesture recognizer
 struct RealityViewWithTap: UIViewRepresentable {
     
-    @Binding var cubeEntity: Entity? // To track the cube entity
+    //@Binding var cubeEntity: Entity? // To track the cube entity
     @Binding var orbEntity: Entity? //var to keep track of the orb entity
+    @Binding var coneEntity: Entity? //var to keep track of the cone entity
     @Binding var score: Int? //var for keeping track of the score
     @Binding var inventory : Array<Any>? //var for keep track of items that have been picked up
     
@@ -33,15 +34,17 @@ struct RealityViewWithTap: UIViewRepresentable {
     class Coordinator: NSObject { //create a coordinator that handles the cube and its functions
         
         var parent: RealityViewWithTap
-        var currentCubeEntity: Entity?
+        //var currentCubeEntity: Entity?
         var currentOrbEntity: Entity?
+        var currentConeEntity: Entity?
         var score: Int?
         var inventory: Array<Any>?
         
         init(parent: RealityViewWithTap) { //initalize functoin
             self.parent = parent
-            self.currentCubeEntity = nil
+            //self.currentCubeEntity = nil
             self.currentOrbEntity = nil
+            self.currentConeEntity = nil
             self.score = 0
             self.inventory = []
         }
@@ -66,20 +69,30 @@ struct RealityViewWithTap: UIViewRepresentable {
                 return
             }
             
+            
+            //guards for checking to see if the objects exist to be compared to
+            /*
             guard let cubeEntity = self.currentCubeEntity else{ //checks to see if there is even a cube to tap
                 print("nothing to combare(Cube)")
                 return
             }
-            
+            */
             guard let orbEntity = self.currentOrbEntity else{
                 print("notthing to compare (orb)")
                 return
             }
             
+            guard let coneEntity = self.currentConeEntity else{
+                print("no compare cone")
+                return
+            }
+            
+            
             //now a loop that goes through to determine if the cube was tapped
             for hit in tapResult{
                 print("thing hit: \(hit.entity.name)") //used for debugging
                     //check to see if we directly hit the cube
+                /*
                 if hit.entity == cubeEntity{
                     parent.increaseScore() //calls the increase score functoin
                     parent.addItemToInventory(itemName: hit.entity.name) //should hopefully add the name of the item to the array
@@ -90,6 +103,7 @@ struct RealityViewWithTap: UIViewRepresentable {
                     
                     return
                 }
+                 */
                 
                 //secondary check to see if what we tapped was a child or parent of the cube not used
                 /*
@@ -161,12 +175,15 @@ struct RealityViewWithTap: UIViewRepresentable {
         
         //add a wait so cube does not appear before plane had a little bit of issues where the cube would appear first and not be on the right plane
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0){
-            let modelCube = self.createCube(in: arView) //creates the cube in the view
+            //let modelCube = self.createCube(in: arView) //creates the cube in the view
             let modelOrb = self.createOrb(in: arView) //creates the orb in the view
-            coordinator.currentCubeEntity = modelCube //connect cube to the coordinator
+            let modelCone = self.createCone(in: arView) //creates the cone in the view
+            //coordinator.currentCubeEntity = modelCube //connect cube to the coordinator
             coordinator.currentOrbEntity = modelOrb //connect the orb to the coordinator
-            self.cubeEntity = modelCube
+            coordinator.currentConeEntity = modelCone //connect the cone to the coordinator
+            //self.cubeEntity = modelCube
             self.orbEntity = modelOrb
+            self.coneEntity = modelCone
             
             
             
@@ -179,8 +196,9 @@ struct RealityViewWithTap: UIViewRepresentable {
     
     //updates the view
     func updateUIView(_ uiView: ARView, context: Context) {
-        context.coordinator.currentCubeEntity = cubeEntity
+        //context.coordinator.currentCubeEntity = cubeEntity
         context.coordinator.currentOrbEntity = orbEntity
+        context.coordinator.currentConeEntity = coneEntity
     }
     
     
@@ -192,29 +210,34 @@ struct RealityViewWithTap: UIViewRepresentable {
     func createOrb(in arView: ARView) -> Entity{
         print("In orb maker")
         
-        //create the model and its attributes for the orb
-        let model = ModelEntity(mesh: MeshResource.generateSphere(radius: 0.005))//creates a orb with a radious of 0.005
-        let material = SimpleMaterial(color: .blue, roughness: 0.15, isMetallic: true) //makes it red and metallic
+        // Create a orb model
+        
+        //ok so via debugging for some reason the generate orb thing is not working but the generate cube is working
+        let model = ModelEntity(mesh: MeshResource.generateSphere(radius: 100)) //makes a sphere with a radius of 1.5
+        let material = SimpleMaterial(color: .blue, roughness: 0.15, isMetallic: true) //makes it blue and metallic
         model.model?.materials = [material]
         
-        model.generateCollisionShapes(recursive: true) //make it possible to tap on
+        
+        model.generateCollisionShapes(recursive: true) //need this so that the orb acutally gets hit by taps
         
         // Create horizontal plane anchor
         let anchor = AnchorEntity(plane: .horizontal)
         
-        model.position = [0.5, 0.1, 0.0] //sets the model .5 meter in the sky
-        model.name = "Mr.Orb" //names the cube
+        model.position = [0.5, 0.1, 0] //sets the model .1 meter in the sky and .5 to the right
+        model.name = "Mr.Orb" //names the orb
         
-        anchor.addChild(model) //adds the cube to the anchor
-        anchor.position = model.position
+        anchor.addChild(model) //adds the orb to the anchor
         
-        arView.scene.addAnchor(anchor)
+        arView.scene.addAnchor(anchor) //adds the anchor to the ar view
         
-        print("orb added at \(model.position)") //debugging
-        print("orb anchor added at \(anchor.position)")
+    
+        
+        //more debugging
+        print("orb added at \(model.position)")
+        print("anchorOrb added \(anchor.position)")
+      
         
         return model
-
         
         
         
@@ -222,6 +245,43 @@ struct RealityViewWithTap: UIViewRepresentable {
     }
     
     //create cone,
+    
+    func createCone(in arView: ARView) -> Entity{
+        print("In cone maker")
+        
+        // Create a orb model
+        
+        //ok so via debugging for some reason the generate orb thing is not working but the generate cube is working
+        let model = ModelEntity(mesh: MeshResource.generateCone(height: 0.1, radius: 0.2)) //makes a cone
+        let material = SimpleMaterial(color: .brown, roughness: 0.15, isMetallic: true) //makes it brown and metallic
+        model.model?.materials = [material]
+        
+        
+        model.generateCollisionShapes(recursive: true) //need this so that the cone acutally gets hit by taps
+        
+        // Create horizontal plane anchor
+        let anchor = AnchorEntity(plane: .horizontal)
+        
+        model.position = [0.5, 0.5, 0] //sets the model .5 meter in the sky and .5 to the right
+        model.name = "Mr.Cone" //names the orb
+        
+        anchor.addChild(model) //adds the cone to the anchor
+        
+        arView.scene.addAnchor(anchor) //adds the anchor to the ar view
+        
+    
+        
+        //more debugging
+        print("cone added at \(model.position)")
+        print("anchorCone added \(anchor.position)")
+      
+        
+        return model
+        
+        
+        
+        
+    }
     
     //create cylinder
     
@@ -322,15 +382,16 @@ extension RealityViewWithTap.Coordinator: UIGestureRecognizerDelegate{
 
 struct ArView: View {
     
-    @State private var cubeEntity: Entity? = nil // To keep track of the cube entity
+    //@State private var cubeEntity: Entity? = nil // To keep track of the cube entity
     @State private var orbEntity: Entity? = nil
+    @State private var coneEntity: Entity? = nil
     @State var score: Int? = 0
     @State var inventory: Array<Any>? = []
     
     var body: some View {
         Text("Test Score Keeper: \(score!)")
         
-        RealityViewWithTap(cubeEntity: $cubeEntity, orbEntity: $orbEntity, score: $score, inventory: $inventory) //calls the reality view with tap struct
+        RealityViewWithTap( /* cubeEntity: $cubeEntity,*/ orbEntity: $orbEntity, coneEntity: $coneEntity, score: $score, inventory: $inventory) //calls the reality view with tap struct
             .onAppear {
                
             }
