@@ -10,27 +10,40 @@ import SwiftUI
 import RealityKit
 import ARKit
 
+
+//for keeping track of items i think the best thing is to create an array and then whenever an object is tapped we move the objects name? to the array and then we can output what objects we have gathered when a user wants to maybe
+
 //got help from chatgpt for this asked "i am making an ar app in swift, i currently have a cube that i want to dissapear when tapped on the screen, it has most of it in a class but i am writing the function in the ar view struct just to see if it will work, having it in a class is probably cleaner but getting it working it top priority, some bits a pieces are modified
 
 //spent seven or so hours trying to get this to work had to fall back to chatgpt and claude but i think it is working now
 
 //Current Bugs
-//ONLY ABLE TO ACESS THIS SCREEN FULL WHEN WE SET IT AS CONTENT VIEW IN APP DELEGATE, UNSURE WHY BUT WILL WORK ON IT WHEN ABLE TO
+//ONLY ABLE TO ACESS THIS SCREEN FULL WHEN WE SET IT AS CONTENT VIEW IN APP DELEGATE, UNSURE WHY BUT WILL WORK ON IT WHEN ABLE TO, it fixed itself somehow not sure, want to keep an eye on this
 
 
 // Custom UIViewRepresentable for RealityKit to add gesture recognizer
 struct RealityViewWithTap: UIViewRepresentable {
     
     @Binding var cubeEntity: Entity? // To track the cube entity
+    @Binding var orbEntity: Entity? //var to keep track of the orb entity
+    @Binding var score: Int? //var for keeping track of the score
+    @Binding var inventory : Array<Any>? //var for keep track of items that have been picked up
+    
     
     class Coordinator: NSObject { //create a coordinator that handles the cube and its functions
         
         var parent: RealityViewWithTap
         var currentCubeEntity: Entity?
+        var currentOrbEntity: Entity?
+        var score: Int?
+        var inventory: Array<Any>?
         
         init(parent: RealityViewWithTap) { //initalize functoin
             self.parent = parent
             self.currentCubeEntity = nil
+            self.currentOrbEntity = nil
+            self.score = 0
+            self.inventory = []
         }
         
         
@@ -54,7 +67,12 @@ struct RealityViewWithTap: UIViewRepresentable {
             }
             
             guard let cubeEntity = self.currentCubeEntity else{ //checks to see if there is even a cube to tap
-                print("nothing to combare")
+                print("nothing to combare(Cube)")
+                return
+            }
+            
+            guard let orbEntity = self.currentOrbEntity else{
+                print("notthing to compare (orb)")
                 return
             }
             
@@ -63,15 +81,18 @@ struct RealityViewWithTap: UIViewRepresentable {
                 print("thing hit: \(hit.entity.name)") //used for debugging
                     //check to see if we directly hit the cube
                 if hit.entity == cubeEntity{
+                    parent.increaseScore() //calls the increase score functoin
+                    parent.addItemToInventory(itemName: hit.entity.name) //should hopefully add the name of the item to the array
                     print("cube hit") //debugging
                     hit.entity.removeFromParent() //when hit remove the cube
                     self.currentCubeEntity = nil
                     parent.cubeEntity = nil
+                    
                     return
                 }
                 
-                //secondary check to see if what we tapped was a child or parent of the cube
-                
+                //secondary check to see if what we tapped was a child or parent of the cube not used
+                /*
                 if hit.entity.parent == cubeEntity.parent{
                     print("hit cube sibling")
                     if let entityparent = hit.entity.parent{
@@ -79,7 +100,7 @@ struct RealityViewWithTap: UIViewRepresentable {
                             if child == cubeEntity{ //if the cube is a sibling
                                 print("found cube")
                                 cubeEntity.removeFromParent() //remove cube
-                                self.currentCubeEntity = nil
+                                self.currentCubeEntity = nil //makes sure to remove cube
                                 parent.cubeEntity = nil
                                 return
                             }
@@ -87,8 +108,10 @@ struct RealityViewWithTap: UIViewRepresentable {
                     }
                     
                 }
+                */
                 
-                //check if cube is child
+                /*
+                //check if cube is child not needed at the moment
                 if hit.entity.children.contains(where: {$0 == cubeEntity}){
                     print("cube is child")
                     cubeEntity.removeFromParent() //remove cube
@@ -96,6 +119,7 @@ struct RealityViewWithTap: UIViewRepresentable {
                     parent.cubeEntity = nil
                     return
                 }
+                */
             }
             
             //final debug
@@ -137,9 +161,14 @@ struct RealityViewWithTap: UIViewRepresentable {
         
         //add a wait so cube does not appear before plane had a little bit of issues where the cube would appear first and not be on the right plane
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0){
-            let model = self.createCube(in: arView)
-            coordinator.currentCubeEntity = model
-            self.cubeEntity = model
+            let modelCube = self.createCube(in: arView) //creates the cube in the view
+            let modelOrb = self.createOrb(in: arView) //creates the orb in the view
+            coordinator.currentCubeEntity = modelCube //connect cube to the coordinator
+            coordinator.currentOrbEntity = modelOrb //connect the orb to the coordinator
+            self.cubeEntity = modelCube
+            self.orbEntity = modelOrb
+            
+            
             
         }
         
@@ -151,13 +180,65 @@ struct RealityViewWithTap: UIViewRepresentable {
     //updates the view
     func updateUIView(_ uiView: ARView, context: Context) {
         context.coordinator.currentCubeEntity = cubeEntity
+        context.coordinator.currentOrbEntity = orbEntity
     }
     
-    //function that actually makes the cube, will need to expand for other objects eventually
+    
+    
+    //CREATING OBJECTS FUNCTION LISTS
+    
+    //create orb
+    
+    func createOrb(in arView: ARView) -> Entity{
+        print("In orb maker")
+        
+        //create the model and its attributes for the orb
+        let model = ModelEntity(mesh: MeshResource.generateSphere(radius: 0.005))//creates a orb with a radious of 0.005
+        let material = SimpleMaterial(color: .blue, roughness: 0.15, isMetallic: true) //makes it red and metallic
+        model.model?.materials = [material]
+        
+        model.generateCollisionShapes(recursive: true) //make it possible to tap on
+        
+        // Create horizontal plane anchor
+        let anchor = AnchorEntity(plane: .horizontal)
+        
+        model.position = [0.5, 0.1, 0.0] //sets the model .5 meter in the sky
+        model.name = "Mr.Orb" //names the cube
+        
+        anchor.addChild(model) //adds the cube to the anchor
+        anchor.position = model.position
+        
+        arView.scene.addAnchor(anchor)
+        
+        print("orb added at \(model.position)") //debugging
+        print("orb anchor added at \(anchor.position)")
+        
+        return model
+
+        
+        
+        
+        
+    }
+    
+    //create cone,
+    
+    //create cylinder
+    
+    //create text object? not sure if needed but interesting
+    
+    
+    
+    
+    
+    //create cube
+    //i think the best way for making multiple objects is maybe making different functions for each object for now until i figure out how to automate all of this
     func createCube(in arView: ARView) -> Entity {
         print("In cube maker")
+        
+        
         // Create a cube model
-        let model = ModelEntity(mesh: MeshResource.generateBox(size: 0.2, cornerRadius: 0.005)) //makes a box with a size of .2 meters
+        let model = ModelEntity(mesh: MeshResource.generateBox(size: 0.1, cornerRadius: 0.005)) //makes a box with a size of .2 meters
         let material = SimpleMaterial(color: .red, roughness: 0.15, isMetallic: true) //makes it red and metallic
         model.model?.materials = [material]
         
@@ -172,21 +253,52 @@ struct RealityViewWithTap: UIViewRepresentable {
         
         anchor.addChild(model) //adds the cube to the anchor
         
-       
-        
-        
-       
-        
-        
-        
         arView.scene.addAnchor(anchor) //adds the anchor to the ar view
         
+        
+        
+        /*
+        //creating second cube DOES NOT WORK
+        print("cube 2 being made")
+        let model2 = ModelEntity(mesh: MeshResource.generateBox(size: 0.1, cornerRadius: 0.005))
+        let material2 = SimpleMaterial(color: .blue, roughness: 0.15, isMetallic: true)
+        model2.model?.materials = [material2]
+        
+        model2.generateCollisionShapes(recursive: true)
+        
+        let anchor2 = AnchorEntity(plane: .horizontal)
+        model2.position = [0,0.5,0]
+        model2.name = "Mrs.Cube"
+        
+        anchor2.addChild(model2)
+        */
         
         //more debugging
         print("Cube added at \(model.position)")
         print("anchor added \(anchor.position)")
+       // print("Cube2 added at \(model2.position)")
+        //print("anchor2 added at \(anchor2.position)")
         
         return model
+    }
+    
+    
+    //Functions for score counting and other game stuff
+    
+    //function to increase score when a object is tapped
+     func increaseScore(){
+        //so this should be a simple function
+        //just a basic add 1 to the score var
+         print("increasing score")
+        score = score! + 1
+        
+    }
+    
+    //function for adding items to the array to keep track of items the user has picked up
+    func addItemToInventory(itemName : String){
+        print("add item to inventory")
+        inventory?.append(itemName) //should hopefully just add the item to the array
+        print(inventory?.first)
     }
 }
 
@@ -211,10 +323,14 @@ extension RealityViewWithTap.Coordinator: UIGestureRecognizerDelegate{
 struct ArView: View {
     
     @State private var cubeEntity: Entity? = nil // To keep track of the cube entity
+    @State private var orbEntity: Entity? = nil
+    @State var score: Int? = 0
+    @State var inventory: Array<Any>? = []
     
     var body: some View {
+        Text("Test Score Keeper: \(score!)")
         
-        RealityViewWithTap(cubeEntity: $cubeEntity) //calls the reality view with tap struct
+        RealityViewWithTap(cubeEntity: $cubeEntity, orbEntity: $orbEntity, score: $score, inventory: $inventory) //calls the reality view with tap struct
             .onAppear {
                
             }
@@ -222,6 +338,12 @@ struct ArView: View {
             .navigationBarBackButtonHidden() //hides the back arrow on the nav bar
             
     }
+    
+    
+    
+    //OLD UNUSED CODE KEEPING FOR REFERENCE
+    
+    
     
     /* moving this to the ui view representable
     func createCube() {

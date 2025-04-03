@@ -14,8 +14,8 @@ import CoreLocationUI
 
 //TO DO LIST:
 //PLACE OBJECTS IN AR VIEW: technically done since we have a cube that appears in the screen, if there is time want to make more cubes show up and in random areas
-//CONNECT TO GPS FOR LOCATION TRACKING: this one is a bit more difficult than expected, currently only getting nil values, spent 6 or so hours trying to figure this out an still no luck, ask pete for help
-//PICK UP OBJECTS: To Start
+//CONNECT TO GPS FOR LOCATION TRACKING: so this is technically done, need to figure out why my phone is not allowing access for stuff
+//PICK UP OBJECTS: DONE for the cube yay
 
 
 
