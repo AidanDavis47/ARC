@@ -213,7 +213,7 @@ struct RealityViewWithTap: UIViewRepresentable {
         // Create a orb model
         
         //ok so via debugging for some reason the generate orb thing is not working but the generate cube is working
-        let model = ModelEntity(mesh: MeshResource.generateSphere(radius: 100)) //makes a sphere with a radius of 1.5
+        let model = ModelEntity(mesh: MeshResource.generateBox(size: 0.2, cornerRadius: 0.005)) //makes a sphere with a radius of 1.5
         let material = SimpleMaterial(color: .blue, roughness: 0.15, isMetallic: true) //makes it blue and metallic
         model.model?.materials = [material]
         
@@ -252,7 +252,7 @@ struct RealityViewWithTap: UIViewRepresentable {
         // Create a orb model
         
         //ok so via debugging for some reason the generate orb thing is not working but the generate cube is working
-        let model = ModelEntity(mesh: MeshResource.generateCone(height: 0.1, radius: 0.2)) //makes a cone
+        let model = ModelEntity(mesh: MeshResource.generateBox(size: 0.2, cornerRadius: 0.005)) //makes a cone
         let material = SimpleMaterial(color: .brown, roughness: 0.15, isMetallic: true) //makes it brown and metallic
         model.model?.materials = [material]
         
@@ -262,7 +262,7 @@ struct RealityViewWithTap: UIViewRepresentable {
         // Create horizontal plane anchor
         let anchor = AnchorEntity(plane: .horizontal)
         
-        model.position = [0.5, 0.5, 0] //sets the model .5 meter in the sky and .5 to the right
+        model.position = [0.5, 0.1, 0] //sets the model .5 meter in the sky and .5 to the right
         model.name = "Mr.Cone" //names the orb
         
         anchor.addChild(model) //adds the cone to the anchor

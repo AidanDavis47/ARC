@@ -34,7 +34,7 @@ TO DO BY APRIL 23:
 
 
 TO DO LIST IN ORDER:
-1. multiple objects appear on screen, currently being worked on having a bit of trouble figuring out how we are seperating objects
+1. multiple objects appear on screen, currently being worked on having a bit of trouble figuring out how we are seperating objects, for some reason cubes can appear but when i try other objects they do not appear for some odd reason
 2.  XX add score tracking, basic function done, remember when calling the function sometimes it has to be parent.increaseScore()
 3.  XX keep track of what objects are picked up, this is currently completed at the moment
 4. get coordinate junk debuged
