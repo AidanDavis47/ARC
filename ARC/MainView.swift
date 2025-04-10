@@ -66,10 +66,11 @@ class GPSGrabber:NSObject, ObservableObject, CLLocationManagerDelegate{
             print("not determined")
             break;
         default:
-            break;
+            break; 
         }
     }
     
+    //bullshit
     
     //now the function to get the location
     func getLoc() -> CLLocationDegrees{
