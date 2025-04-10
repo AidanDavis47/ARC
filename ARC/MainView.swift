@@ -70,7 +70,6 @@ class GPSGrabber:NSObject, ObservableObject, CLLocationManagerDelegate{
         }
     }
     
-    //bullshit
     
     //now the function to get the location
     func getLoc() -> CLLocationDegrees{
