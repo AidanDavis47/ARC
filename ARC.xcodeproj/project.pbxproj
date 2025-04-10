@@ -29,9 +29,22 @@
 		7D5D81642D779BCB00005FCC /* ARCUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ARCUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		7D8493542DA767CF00A8A01D /* Exceptions for "ARC" folder in "ARC" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 7D5D81492D779BC800005FCC /* ARC */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		7D5D814C2D779BC800005FCC /* ARC */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7D8493542DA767CF00A8A01D /* Exceptions for "ARC" folder in "ARC" target */,
+			);
 			path = ARC;
 			sourceTree = "<group>";
 		};
@@ -399,9 +412,13 @@
 				DEVELOPMENT_TEAM = 676J86A5FT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ARC/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "ARC Would Like to use your location";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "arc would like to see your location";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "arc would like to see your location";
 				INFOPLIST_KEY_NSLocationUsageDescription = "Arc would like to know your location";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "arc would like to see your location";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arkit;
@@ -432,9 +449,13 @@
 				DEVELOPMENT_TEAM = 676J86A5FT;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ARC/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "ARC Would Like to use your location";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "arc would like to see your location";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "arc would like to see your location";
 				INFOPLIST_KEY_NSLocationUsageDescription = "Arc would like to know your location";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "arc would like to see your location";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arkit;
