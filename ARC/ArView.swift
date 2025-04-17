@@ -23,6 +23,7 @@ import ARKit
 
 
 //CURRENTLY WE HAVE TWO COORDINATORS, ONE FOR THE CUBE AND ONE FOR THE ORB
+//the orb coordinator is coordinator orb (real good naming convention) if this does not work will want to maybe ask ai on how to have multiple objects with a same coordinator that actually works
 
 
 // Custom UIViewRepresentable for RealityKit to add gesture recognizer
@@ -40,6 +41,8 @@ struct RealityViewWithTap: UIViewRepresentable {
     
     
     //create a coordinator for the orb maybe
+    //dont think this is going to work going to comment it out and related code just incase it will be be useful in future
+    /*
     class CoordinatorOrb: NSObject{
         var parent: RealityViewWithTap
         var currentOrbEntity: Entity?
@@ -52,6 +55,7 @@ struct RealityViewWithTap: UIViewRepresentable {
         //the actual orb tap function copied from the cube code
         @objc func handleTap(_ sender: UITapGestureRecognizer) {
             guard let content = sender.view as? ARView else { return }
+            print("in orb tapping function")
             
             
             
@@ -82,13 +86,13 @@ struct RealityViewWithTap: UIViewRepresentable {
             
             //now a loop that goes through to determine if the cube was tapped
             for hit in tapResult{
-                print("thing hit: \(hit.entity.name)") //used for debugging
+                print("thing hit(orb): \(hit.entity.name)") //used for debugging
                 //check to see if we directly hit the cube
                 /* */
                 if hit.entity == orbEntity{
                     parent.increaseScore() //calls the increase score functoin
                     parent.addItemToInventory(itemName: hit.entity.name) //should hopefully add the name of the item to the array
-                    print("cube hit") //debugging
+                    print("orb hit") //debugging
                     hit.entity.removeFromParent() //when hit remove the cube
                     self.currentOrbEntity = nil
                     //parent.cubeEntity = nil
@@ -135,7 +139,7 @@ struct RealityViewWithTap: UIViewRepresentable {
         }
     }
         
-        
+      */
         
         class Coordinator: NSObject { //create a coordinator that handles the cube and its functions
             
@@ -159,7 +163,7 @@ struct RealityViewWithTap: UIViewRepresentable {
             //the actual cube tap function
             @objc func handleTap(_ sender: UITapGestureRecognizer) {
                 guard let content = sender.view as? ARView else { return }
-                
+                print("in cube tapping function")
                 
                 
                 //get the location of the tap
@@ -180,6 +184,11 @@ struct RealityViewWithTap: UIViewRepresentable {
                 
                 guard let cubeEntity = self.currentCubeEntity else{ //checks to see if there is even a cube to tap
                     print("nothing to combare(Cube)")
+                    return
+                }
+                
+                guard let orbEntity = self.currentOrbEntity else{
+                    print("nothing to compare(orb)")
                     return
                 }
                 
@@ -211,10 +220,17 @@ struct RealityViewWithTap: UIViewRepresentable {
                         
                         return
                     }
+                    if hit.entity == orbEntity{ //an if statement to determine what object has been hit
+                        parent.increaseScore()
+                        parent.addItemToInventory(itemName: hit.entity.name)
+                        print("orb hit")
+                        hit.entity.removeFromParent()
+                        self.currentOrbEntity = nil
+                    }
                     
                     
                     //secondary check to see if what we tapped was a child or parent of the cube not used
-                    /* */
+                    /*
                     if hit.entity.parent == cubeEntity.parent{
                         print("hit cube sibling")
                         if let entityparent = hit.entity.parent{
@@ -232,7 +248,7 @@ struct RealityViewWithTap: UIViewRepresentable {
                     }
                     
                     
-                    /* */
+                    
                     //check if cube is child not needed at the moment
                     if hit.entity.children.contains(where: {$0 == cubeEntity}){
                         print("cube is child")
@@ -241,7 +257,7 @@ struct RealityViewWithTap: UIViewRepresentable {
                         //parent.cubeEntity = nil
                         return
                     }
-                    
+                    */
                 }
                 
                 //final debug
@@ -255,10 +271,17 @@ struct RealityViewWithTap: UIViewRepresentable {
             }
         }
         
-        func makeCoordinator() -> Coordinator { //function that makes the actual coordinatior
+        func makeCoordinator() -> Coordinator { //function that makes the actual coordinatior, this is currently the main coordinator and is connected to the cube
+            print("cube coordinator maker")
             return Coordinator(parent: self)
         }
-        
+    
+    /*
+        func makeOrbCoordinator() -> CoordinatorOrb{ //makes the coordinator for the orb coordinator
+            print("orn coordinator maker")
+            return CoordinatorOrb(parent: self)
+        }
+        */
         //function that makes the ar view so that we can use tap recognizers in ar
         func makeUIView(context: Context) -> ARView {
             let arView = ARView(frame: .zero) //create arvies
@@ -272,11 +295,14 @@ struct RealityViewWithTap: UIViewRepresentable {
             arView.debugOptions = [.showFeaturePoints, .showWorldOrigin] //used for debugging the ar screen
             
             // Add tap gesture recognizer
-            let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
+            let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:))) //this is the main gesture handler for the app, it is currently only linked to the cube
+            //let tapGesterOrb = UITapGestureRecognizer(target: context.coordinator, action: #selector(CoordinatorOrb.handleTap(_:))) //gesture that is only linked to the orb
             tapGesture.cancelsTouchesInView = false
+            //tapGesterOrb.cancelsTouchesInView = false
             tapGesture.delegate = context.coordinator //creates a delegator
+            //tapGesterOrb.delegate = context.coordinator
             arView.addGestureRecognizer(tapGesture) //adds the tap gesture function to the gesture that are recognized in the ar view
-            
+            //arView.addGestureRecognizer(tapGesterOrb)
             arView.session.delegate = context.coordinator
             
             let coordinator = context.coordinator
@@ -331,7 +357,7 @@ struct RealityViewWithTap: UIViewRepresentable {
             // Create horizontal plane anchor
             let anchor = AnchorEntity(plane: .horizontal)
             
-            model.position = [0.5, 0.1, 0] //sets the model .1 meter in the sky and .5 to the right
+            model.position = [0.0, 0.5, 0] //sets the model .1 meter in the sky and .5 to the right
             model.name = "Mr.Orb" //names the orb
             
             anchor.addChild(model) //adds the orb to the anchor
@@ -425,27 +451,12 @@ struct RealityViewWithTap: UIViewRepresentable {
             
             
             
-            /*
-             //creating second cube DOES NOT WORK
-             print("cube 2 being made")
-             let model2 = ModelEntity(mesh: MeshResource.generateBox(size: 0.1, cornerRadius: 0.005))
-             let material2 = SimpleMaterial(color: .blue, roughness: 0.15, isMetallic: true)
-             model2.model?.materials = [material2]
-             
-             model2.generateCollisionShapes(recursive: true)
-             
-             let anchor2 = AnchorEntity(plane: .horizontal)
-             model2.position = [0,0.5,0]
-             model2.name = "Mrs.Cube"
-             
-             anchor2.addChild(model2)
-             */
+          
             
             //more debugging
             print("Cube added at \(model.position)")
             print("anchor added \(anchor.position)")
-            // print("Cube2 added at \(model2.position)")
-            //print("anchor2 added at \(anchor2.position)")
+          
             
             return model
         }
@@ -466,7 +477,8 @@ struct RealityViewWithTap: UIViewRepresentable {
         func addItemToInventory(itemName : String){
             print("add item to inventory")
             inventory?.append(itemName) //should hopefully just add the item to the array
-            print(inventory?.first)
+            //print(inventory?.first)
+            print(inventory)
         }
     }
     
@@ -488,7 +500,13 @@ struct RealityViewWithTap: UIViewRepresentable {
             return true
         }
     }
-
+/*
+    extension RealityViewWithTap.CoordinatorOrb: UIGestureRecognizerDelegate{
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimul: UIGestureRecognizer) -> Bool{
+        return true
+        }
+    }
+*/
 
     struct ArView: View {
         
@@ -506,267 +524,11 @@ struct RealityViewWithTap: UIViewRepresentable {
                     
                 }
                 .edgesIgnoringSafeArea(.all) //makes it full screen
-                .navigationBarBackButtonHidden() //hides the back arrow on the nav bar
+                //.navigationBarBackButtonHidden() //hides the back arrow on the nav bar
             
         }
     }
     
     
     
-    //OLD UNUSED CODE KEEPING FOR REFERENCE
-    
-    
-    
-    /* moving this to the ui view representable
-    func createCube() {
-        print("In cube maker")
-        // Create a cube model
-        let model = Entity()
-        let mesh = MeshResource.generateBox(size: 0.1, cornerRadius: 0.005)
-        let material = SimpleMaterial(color: .gray, roughness: 0.15, isMetallic: true)
-        model.components.set(ModelComponent(mesh: mesh, materials: [material]))
-        model.position = [0, 0.05, 0]
-        
-        // Store the model in the state variable to track it
-        self.cubeEntity = model
-        
-        // Create horizontal plane anchor
-        let anchor = AnchorEntity(.plane(.horizontal, classification: .any, minimumBounds: SIMD2<Float>(0.2, 0.2)))
-        anchor.addChild(model)
-        
-        // Find the ARView and add the anchor
-        if let arVIEW = getarVIEW(){
-            arVIEW.scene.addAnchor(anchor)
-        } else {
-            print("Ar view is still not being found yipeee")
-        }
-    }
-     */
-    
-    
-    /* as usual the ai lied
-    //apparently we need a helper function to get the view where we are placing the cube, you could do this easier before ios 15 but that functionality got deprecated so chagpt said this is how you do it now
-    func getarVIEW() -> ARView?{
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene{
-            return scene.windows.first?.rootViewController?.view as? ARView
-        }
-        return nil
-    }
-     */
 
-
-
-
-/* old colde from the first attempt
- 
- struct ArView : View{
- 
- 
- @State var cube: ModelEntity? //vars that are for the cube and the anchor for the cube
- @State var anchor: AnchorEntity? //the @State lets me pass these vars into arViewPsuedo, will want to research why at some point
- 
- @State var ArVarView: ARView //creates a ar view variable
- 
- var body: some View{
- ArViewPsuedo(ArView: $ArVarView, cube: $cube, anchor: $anchor) //this is used to intergrate the actual ar view into the ui view because apparently in order to interact with objects both the ar view and ui view need to be integrated
- .edgesIgnoringSafeArea(.all)
- .onAppear{ //when the body appears we want to create the actual ar view, wonder why it is different compared to how the xcode template made it
- createARView()
- }
- }
- 
- //now the function for creating the ar view itself xcode just calls a reality view obeject while this way looks like it creates a "session" and runs it based off the configuration variable which is set to ar world configuration
- func createARView(){
- //create a configuration var which is declared as a ar configuration
- let config = ARWorldTrackingConfiguration()
- //now we create a session based off the config
- ArVarView.session.run(config)
- 
- 
- //now a helper function to add a cube to the screen, can probably modify this for when we want to add different objects and such
- 
- addCube()
- }
- 
- func addCube(){
- //from the xcode template
- let mesh = MeshResource.generateBox(size: 0.1, cornerRadius: 0.005)
- let material = SimpleMaterial(color: .gray, roughness: 0.15, isMetallic: true)
- 
- cube = ModelEntity(mesh: mesh, materials: [material]) //creates the cube itself
- 
- anchor = AnchorEntity(world: SIMD3(x: 0, y:0, z: -0.5)) //creates the anchor, could modify it for later for more random anchoring
- 
- anchor?.addChild(cube!) //connects the cube to the anchor
- 
- ArVarView.scene.addAnchor(anchor!) //adds the anchor to the actual view now
- 
- }
- 
- }
- 
- 
- //now the constructer for the pseudo ar view, the ai calls its an representable(not entirely sure what that means yet)
- //i wonder if there is a way to not have to integrate, i think the problem is that we are using structs and not classes
- //could probably redo if time
- struct ArViewPsuedo : UIViewRepresentable{
- @Binding var ArView: ARView
- @Binding var cube: ModelEntity?
- @Binding var anchor :AnchorEntity?
- //very interesting thing i found out is if you create an empty struct it will give an error saying that it does not conform to whatever protocol you are using, you can then ask it to fix it and it spits out these template functions and now it works,
- //for some reason it did not like the functions i made below these maybe because of the function name? good to know for the future
- 
- func makeUIView(context: Context) -> ARView {
- let ArView = ARView(frame: .zero) //creates the view
- 
- let config = ARWorldTrackingConfiguration()
- ArView.session.run(config)
- 
- 
- //now we create a gesture recognizer for the tap which is the whole point of these weird struct integrations
- let tapScreen = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tapHandler(_:)))
- ArView.addGestureRecognizer(tapScreen)
- 
- 
- 
- //now the view should update itself
- self.ArView = ArView
- return ArView
- }
- 
- 
- 
- func updateUIView(_ uiView: ARView, context: Context) {
- 
- }
- 
- typealias UIViewType = ARView //not sure exactly what this does but the error told me it need it to conform to the UI View protocol
- 
- func makeCoordinator() -> Coordinator {
- return Coordinator(cube: $cube, anchor: $anchor, ArView: ArView)
- }
- 
- 
- 
- 
- //now a function for making the actual view
- /*
-  func makeView(context: Context) -> ARView{
-  let ArView = ARView(frame: .zero) //creates the view
-  
-  let config = ARWorldTrackingConfiguration()
-  ArView.session.run(config)
-  
-  
-  //now we create a gesture recognizer for the tap which is the whole point of these weird struct integrations
-  let tapScreen = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tapHandler(_:)))
-  ArView.addGestureRecognizer(tapScreen)
-  
-  
-  
-  //now the view should update itself
-  self.ArView = ArView
-  return ArView
-  }
-  
-  
-  //apparently you need a update view function to conform to uiViewRepresntable, but we are not using it just yet so keep it empty?
-  
-  func updateView(_ uiView: ARView, context : Context){
-  
-  }
-  */
- 
- 
- //now apparently we make something called a coordinator which is what actually handles the tap recognization
- class Coordinator: NSObject{
- var cube: Binding<ModelEntity?>
- var anchor: Binding<AnchorEntity?>
- var ArView: ARView
- 
- 
- init(cube: Binding<ModelEntity?>, anchor: Binding<AnchorEntity?>, ArView: ARView!) {
- self.cube = cube
- self.anchor = anchor
- self.ArView = ArView
- }
- 
- 
- //the handler for the actual tap
- @objc func tapHandler(_ gesture: UIGestureRecognizer){
- //figure out where the screen was tapped
- let loc = gesture.location(in: ArView)
- 
- 
- //now we use a hit test function which already exists, pretty cool
- let test = ArView.hitTest(loc, query: .nearest, mask: .all)
- //if check to see if the tap was on the cube
- let tapLoc = test.first?.entity
- if tapLoc == cube.wrappedValue{ //if we tap on the cube
- cube.wrappedValue?.removeFromParent() //we remove it from the parent
- }
- 
- }
- }
- 
- 
- 
- 
- 
- }
- 
- 
- 
- 
- 
- 
- /* from the template that was made by xcode, does not work as wanted
-  struct Arview : UIViewRepresentable{
-  let tapScreen = UITapGestureRecognizer(target: self, action: #selector(cubeTap(_:)))
-  
-  
-  
-  var body: some View {
-  // this whole commented chunk is a template for the ar aspect, just keeping it around until we figure out how to switch screen modes
-  
-  
-  
-  RealityView { content in
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  // Create a cube model
-  let model = Entity()
-  
-  
-  
-  let mesh = MeshResource.generateBox(size: 0.1, cornerRadius: 0.005)
-  let material = SimpleMaterial(color: .gray, roughness: 0.15, isMetallic: true)
-  model.components.set(ModelComponent(mesh: mesh, materials: [material]))
-  model.position = [0, 0.05, 0]
-  
-  // Create horizontal plane anchor for the content
-  let anchor = AnchorEntity(.plane(.horizontal, classification: .any, minimumBounds: SIMD2<Float>(0.2, 0.2)))
-  anchor.addChild(model)
-  
-  
-  // Add the horizontal plane anchor to the scene
-  content.add(anchor)
-  content.camera = .spatialTracking
-  
-  
-  }
-  .edgesIgnoringSafeArea(.all)
-  .navigationBarBackButtonHidden(true)
-  
-  }
-  
-  }
-  */
- */
