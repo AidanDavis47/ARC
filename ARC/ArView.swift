@@ -445,6 +445,7 @@ struct RealityViewWithTap: UIViewRepresentable {
             model.position = [0, 0.1, 0.0] //sets the model .1 meter in the sky
             model.name = "Mr.Cube" //names the cube
             
+            
             anchor.addChild(model) //adds the cube to the anchor
             
             arView.scene.addAnchor(anchor) //adds the anchor to the ar view
@@ -508,6 +509,15 @@ struct RealityViewWithTap: UIViewRepresentable {
     }
 */
 
+
+//function for transfering gps coordinates to relative coordinates based off chat gpt code at the bottom of the page
+func convertgpsToArCoords(orgin: CLLocationCoordinate2D, dest: CLLocation) -> SCNVector3 {
+    //dont know exactly how to do this kind of following what the evil ai which i dont like but will see if it works
+    let distance = dest.distance(from: orgin)
+    let bearing = getBearing(from: origin.coordinate, to: destination.coordinate)
+    
+}
+
     struct ArView: View {
         
         @State private var cubeEntity: Entity? = nil // To keep track of the cube entity
@@ -530,5 +540,39 @@ struct RealityViewWithTap: UIViewRepresentable {
     }
     
     
-    
+    /* chat gpt started us off with this for using realife coordinates for placeing objects based off real world coordinates
+     
+     func translateCoordinateToAR(origin: CLLocation, destination: CLLocation) -> SCNVector3 {
+         let distance = destination.distance(from: origin)
+
+         let bearing = getBearing(from: origin.coordinate, to: destination.coordinate)
+
+         // Convert polar to cartesian (X and Z)
+         let x = Float(distance * sin(bearing * .pi / 180))
+         let z = Float(-distance * cos(bearing * .pi / 180)) // ARKit's z is negative going forward
+
+         let y: Float = 0 // Altitude offset can be added here
+
+         return SCNVector3(x, y, z)
+     }
+     
+     
+     
+     
+     func getBearing(from coordinate1: CLLocationCoordinate2D, to coordinate2: CLLocationCoordinate2D) -> Double {
+         let lat1 = coordinate1.latitude * .pi / 180
+         let lon1 = coordinate1.longitude * .pi / 180
+
+         let lat2 = coordinate2.latitude * .pi / 180
+         let lon2 = coordinate2.longitude * .pi / 180
+
+         let deltaLon = lon2 - lon1
+         let y = sin(deltaLon) * cos(lat2)
+         let x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(deltaLon)
+         let bearing = atan2(y, x) * 180 / .pi
+         return (bearing + 360).truncatingRemainder(dividingBy: 360)
+     }
+     
+     
+     */
 
