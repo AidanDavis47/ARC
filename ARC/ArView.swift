@@ -21,6 +21,10 @@ import ARKit
 //ONLY ABLE TO ACESS THIS SCREEN FULL WHEN WE SET IT AS CONTENT VIEW IN APP DELEGATE, UNSURE WHY BUT WILL WORK ON IT WHEN ABLE TO, it fixed itself somehow not sure, want to keep an eye on this
 
 
+
+//CURRENTLY WE HAVE TWO COORDINATORS, ONE FOR THE CUBE AND ONE FOR THE ORB
+
+
 // Custom UIViewRepresentable for RealityKit to add gesture recognizer
 struct RealityViewWithTap: UIViewRepresentable {
     
@@ -94,7 +98,7 @@ struct RealityViewWithTap: UIViewRepresentable {
                 
                 
                 //secondary check to see if what we tapped was a child or parent of the cube not used
-                /* */
+                /*
                 if hit.entity.parent == orbEntity.parent{
                     print("hit cube sibling")
                     if let entityparent = hit.entity.parent{
@@ -112,7 +116,7 @@ struct RealityViewWithTap: UIViewRepresentable {
                 }
                 
                 
-                /* */
+                /*
                 //check if cube is child not needed at the moment
                 if hit.entity.children.contains(where: {$0 == orbEntity}){
                     print("cube is child")
@@ -121,11 +125,12 @@ struct RealityViewWithTap: UIViewRepresentable {
                     //parent.cubeEntity = nil
                     return
                 }
+                 */ */
                 
             }
             
             //final debug
-            print("cube was not hit")
+            print("orb was not hit")
             
         }
     }
