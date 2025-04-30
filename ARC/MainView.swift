@@ -19,7 +19,10 @@ import CoreLocationUI
 
 
 
-
+var mainlat : Double = 0
+var mainLong : Double = 0
+var mainAlt : Double = 0
+var mainLoc : CLLocation? = nil
 
 //had help from chat gpt for learning the syntax and how to actually pull coordinates
 
@@ -34,7 +37,7 @@ class GPSGrabber:NSObject, ObservableObject, CLLocationManagerDelegate{
         super.init()
         
         locManager.delegate = self
-        locManager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        locManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
         locManager.requestWhenInUseAuthorization() //asks the user for authrorizatoin
         locManager.startUpdatingLocation() //starts keep track of the location
         
@@ -45,7 +48,18 @@ class GPSGrabber:NSObject, ObservableObject, CLLocationManagerDelegate{
     func locationManager(_ manager: CLLocationManager, didUpdateLocations loc: [CLLocation]){
         if let location = loc.last { //gets the most recent location
             curLoc = location
+            mainLoc = location //need this to pass to the next view
+            mainlat = location.coordinate.latitude
+            mainLong = location.coordinate.longitude
+            mainAlt = location.altitude
+            
+            
+            //print(curLoc) //want to get the location and see if we also get elevatoin
+            //print(location.altitude) //prints the altitude as well
+            
             coord = location.coordinate.latitude
+            
+            //i want to pass the coordinates to the next screen
         }
     }
     
@@ -106,38 +120,7 @@ struct MainView : View{
     
     
     
-    /* old location getting function turns out i want to make a class for this stuff
-    func getLocation(){ //turns out have to declare this within the struct or a class, did not want to make an entirely new class just yet
-        let locManager = CLLocationManager() //create a location manager var
-        
-        locManager.desiredAccuracy = kCLLocationAccuracyHundredMeters //try to get the best accuracy at the moment
-        locManager.requestWhenInUseAuthorization() //requesting authorization
-        locManager.requestAlwaysAuthorization()
-        locManager.startUpdatingLocation() //start updating the location
-        
-        coordinate = locManager.location?.coordinate.latitude ?? 848 //xcode gave me a "fix" for this not sure what it does exactly, supposedly 848 is the default value if the value is nil very interesting, had another thing where it could force unwrap but that would crash the app
-        print(locManager.location?.coordinate) //debugging
-        
-        
-        
-        //going to do a if statement to find out if location services are even enabled
-        //still getting a nil value
-        if CLLocationManager.locationServicesEnabled(){ //weird purple error message occurs here
-            locManager.requestWhenInUseAuthorization()
-            locManager.startUpdatingLocation()
-            print("location service work") //so i am getting this which means it is technically working at the moment
-        }else{
-            print("Location service no work") //debugging
-        }
-        
-        if locManager.location?.coordinate == nil { //this if statement does not catch it still goes infinite and then crashes
-            getLocation()
-        }
-        
-        
-        
-    }
-     */
+    
     
     //so i think it is because the value is nil because it takes awhile to get location so proabably want an if statement?
     
@@ -186,31 +169,7 @@ struct MainView : View{
             
             
             
-            /* this whole commented chunk is a template for the ar aspect, just keeping it around until we figure out how to switch screen modes
-             RealityView { content in
-             
-             // Create a cube model
-             let model = Entity()
-             let mesh = MeshResource.generateBox(size: 0.1, cornerRadius: 0.005)
-             let material = SimpleMaterial(color: .gray, roughness: 0.15, isMetallic: true)
-             model.components.set(ModelComponent(mesh: mesh, materials: [material]))
-             model.position = [0, 0.05, 0]
-             
-             // Create horizontal plane anchor for the content
-             let anchor = AnchorEntity(.plane(.horizontal, classification: .any, minimumBounds: SIMD2<Float>(0.2, 0.2)))
-             anchor.addChild(model)
-             
-             // Add the horizontal plane anchor to the scene
-             content.add(anchor)
-             
-             content.camera = .spatialTracking
-             
-             }*/
-            //.edgesIgnoringSafeArea(.all)
             
-            //stuff from xcode tutorial provided by apple yay :)
-            //.padding()
-        
     
 
 
