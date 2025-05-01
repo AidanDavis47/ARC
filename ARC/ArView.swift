@@ -77,14 +77,18 @@ struct RealityViewWithTap: UIViewRepresentable {
      coords for first row in class room:47.75391312,-117.41612673   ALT: 588.2369567041552
      
      
+     random guesses for coordinates in this room:
+     47.75401420,-117.41622780    ALT: 588.2369567041552
+     
+     
      
      */
     
     //turns out if distances are to far we get a nil value and your phone explodes
-    var homeLatandLong = CLLocationCoordinate2D(latitude: 47.63730776, longitude: -117.42897956)
-    var homeCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.63728471 , longitude: -117.42908024), altitude: 665.6621078665383, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
     
-    var orbCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.63721840, longitude: -117.42898652), altitude: 662.7344210334122, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+    var homeCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75391312 , longitude: -117.41612673), altitude: 588.2369567041552, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+    
+    var orbCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75401420, longitude: -117.41622780), altitude: 588.2369567041552, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
     /*
     //this function is for getting the difference between the users locatoin and the fixed location of the cube
     func getCoordinateDifferences(lat : Double, long : Double, alt : Double){
