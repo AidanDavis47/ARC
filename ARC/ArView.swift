@@ -80,6 +80,13 @@ struct RealityViewWithTap: UIViewRepresentable {
      random guesses for coordinates in this room:
      47.75401420,-117.41622780    ALT: 588.2369567041552
      
+     Trophy Coordinates
+     47.75401628,-117.41595848, ALT: 584.0630307989195
+     
+     
+     Rock Coordinates
+     47.75400978,-117.41619563, ALT: 585.0755367605016
+     
      
      
      */
@@ -88,7 +95,17 @@ struct RealityViewWithTap: UIViewRepresentable {
     
     var homeCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75391312 , longitude: -117.41612673), altitude: 588.2369567041552, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
     
-    var orbCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75401420, longitude: -117.41622780), altitude: 588.2369567041552, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+    var orbCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75401628, longitude: -117.41595848), altitude: 584.0630307989195, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+    
+    var coneCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75400978, longitude: -117.41619563), altitude: 585.0755367605016, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+    
+    /*
+     var nameofobjCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: , longtitude: ), altitude: , horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+     
+     
+     
+     
+     */
     /*
     //this function is for getting the difference between the users locatoin and the fixed location of the cube
     func getCoordinateDifferences(lat : Double, long : Double, alt : Double){
@@ -222,6 +239,11 @@ struct RealityViewWithTap: UIViewRepresentable {
                     return
                 }
                 
+                guard let coneEntity = self.currentConeEntity else{
+                    print("nothing to compare(cone")
+                    return
+                }
+                
                 
                 
                 
@@ -246,6 +268,14 @@ struct RealityViewWithTap: UIViewRepresentable {
                         print("orb hit")
                         hit.entity.removeFromParent()
                         self.currentOrbEntity = nil
+                    }
+                    
+                    if hit.entity == coneEntity{
+                        parent.increaseScore()
+                        parent.addItemToInventory(itemName: hit.entity.name)
+                        print("cone hit")
+                        hit.entity.removeFromParent()
+                        self.currentCubeEntity = nil
                     }
                     
                     
@@ -299,13 +329,13 @@ struct RealityViewWithTap: UIViewRepresentable {
                 
                 let modelCube = self.createCube(in: arView) //creates the cube in the view
                 let modelOrb = self.createOrb(in: arView) //creates the orb in the view
-                //let modelCone = self.createCone(in: arView) //creates the cone in the view
+                let modelCone = self.createCone(in: arView) //creates the cone in the view
                 coordinator.currentCubeEntity = modelCube //connect cube to the coordinator
                 coordinator.currentOrbEntity = modelOrb //connect the orb to the coordinator
-                //coordinator.currentConeEntity = modelCone //connect the cone to the coordinator
+                coordinator.currentConeEntity = modelCone //connect the cone to the coordinator
                 self.cubeEntity = modelCube
                 self.orbEntity = modelOrb
-                //self.coneEntity = modelCone
+                self.coneEntity = modelCone
                 
                 
                 
@@ -321,7 +351,7 @@ struct RealityViewWithTap: UIViewRepresentable {
         func updateUIView(_ uiView: ARView, context: Context) {
             context.coordinator.currentCubeEntity = cubeEntity
             context.coordinator.currentOrbEntity = orbEntity
-            //context.coordinator.currentConeEntity = coneEntity
+            context.coordinator.currentConeEntity = coneEntity
         }
         
         
@@ -376,8 +406,8 @@ struct RealityViewWithTap: UIViewRepresentable {
             // Create a orb model
             
             //ok so via debugging for some reason the generate orb thing is not working but the generate cube is working
-            let model = ModelEntity(mesh: MeshResource.generateBox(size: 0.2, cornerRadius: 0.005)) //makes a cone
-            let material = SimpleMaterial(color: .brown, roughness: 0.15, isMetallic: true) //makes it brown and metallic
+            let model = ModelEntity(mesh: MeshResource.generateBox(size: 0.3, cornerRadius: 0.005)) //makes a cone
+            let material = SimpleMaterial(color: .green, roughness: 0.15, isMetallic: true) //makes it brown and metallic
             model.model?.materials = [material]
             
             
