@@ -37,7 +37,7 @@ class GPSGrabber:NSObject, ObservableObject, CLLocationManagerDelegate{
         super.init()
         
         locManager.delegate = self
-        locManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+        locManager.desiredAccuracy = kCLLocationAccuracyBest
         locManager.requestWhenInUseAuthorization() //asks the user for authrorizatoin
         locManager.startUpdatingLocation() //starts keep track of the location
         

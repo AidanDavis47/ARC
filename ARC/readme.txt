@@ -76,3 +76,10 @@ upstairs room coords
 
 backyard coords
 +47.63728471,-117.42908024, ALT:665.6621078665383
+
+
+
+TO DO BEFORE PRESENTATION:
+1. TRY TO MAKE THE USER LOCATION A LITTLE BIT MORE ACCURATE (Got this working to atleast within 2 meters which is better may want to grab coordinates of locations again because they probably were slightly off)
+2. MAKE INVISIBLE WALLS TO BLOCK OBJECTS SO THEY ARE NOT SEEN THROUGH WALLS (Dereks idea of that the user has to tap to scan the area to see if they are within a certain distance of the object so i want to implement this abit) this probably would mean we want to make a new function such as scan area or something, can probably use a tap function caller
+3. THE MYTHICAL CONNECTION TO OTHER PHONE PROBLEM

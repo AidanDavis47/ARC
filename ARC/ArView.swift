@@ -23,6 +23,9 @@ import CoreLocationUI
 //ONLY ABLE TO ACESS THIS SCREEN FULL WHEN WE SET IT AS CONTENT VIEW IN APP DELEGATE, UNSURE WHY BUT WILL WORK ON IT WHEN ABLE TO, it fixed itself somehow not sure, want to keep an eye on this
 
 
+/* CURRENTLY DEALING WITH STUFF BEING NESTED WITHIN EACHOTHER*/
+
+
 
 //CURRENTLY WE HAVE TWO COORDINATORS, ONE FOR THE CUBE AND ONE FOR THE ORB
 //the orb coordinator is coordinator orb (real good naming convention) if this does not work will want to maybe ask ai on how to have multiple objects with a same coordinator that actually works
@@ -40,6 +43,9 @@ struct RealityViewWithTap: UIViewRepresentable {
     @Binding var coneEntity: Entity? //var to keep track of the cone entity
     @Binding var score: Int? //var for keeping track of the score
     @Binding var inventory : Array<Any>? //var for keep track of items that have been picked up
+    //@Binding var cubeCoords2 : CLLocation?
+    //@Binding var orbCoords2 : CLLocation?
+    //@Binding var coneCoords2: CLLocation?
     
     //these are just the fixed locatoin for one of the cubes, the one in the front row of the class room
     var fixedLocationOneLat = 47.75391819
@@ -95,9 +101,9 @@ struct RealityViewWithTap: UIViewRepresentable {
     
     var homeCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75391312 , longitude: -117.41612673), altitude: 588.2369567041552, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
     
-    var orbCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75401628, longitude: -117.41595848), altitude: 584.0630307989195, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+     var orbCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75401628, longitude: -117.41595848), altitude: 584.0630307989195, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
     
-    var coneCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75400978, longitude: -117.41619563), altitude: 585.0755367605016, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+     var coneCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75400978, longitude: -117.41619563), altitude: 585.0755367605016, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
     
     /*
      var nameofobjCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: , longtitude: ), altitude: , horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
@@ -138,6 +144,7 @@ struct RealityViewWithTap: UIViewRepresentable {
    */
     
     //asked ai for help on a better way of getting coordinates for latitude and longitude
+    /*
     func gpsToARPosition(userLocation: CLLocation, poiLocation: CLLocation) -> SIMD3<Float>? {
                 // Calculate distance between user and POI
                 let distance = Float(userLocation.distance(from: poiLocation))
@@ -186,8 +193,10 @@ struct RealityViewWithTap: UIViewRepresentable {
                 
                 return bearing
             }
+     */
     
     
+
         class Coordinator: NSObject { //create a coordinator that handles the cube and its functions
             
             var parent: RealityViewWithTap
@@ -196,6 +205,10 @@ struct RealityViewWithTap: UIViewRepresentable {
             var currentConeEntity: Entity?
             var score: Int?
             var inventory: Array<Any>?
+            var cubeCoords2: CLLocation?
+            var orbCoords2: CLLocation?
+            var coneCoords2: CLLocation?
+            
             
             init(parent: RealityViewWithTap) { //initalize functoin
                 self.parent = parent
@@ -204,7 +217,127 @@ struct RealityViewWithTap: UIViewRepresentable {
                 self.currentConeEntity = nil
                 self.score = 0
                 self.inventory = []
+                self.cubeCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75391312 , longitude: -117.41612673), altitude: 588.2369567041552, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+                self.orbCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75401628, longitude: -117.41595848), altitude: 584.0630307989195, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+                self.coneCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75400978, longitude: -117.41619563), altitude: 585.0755367605016, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
             }
+            
+            func gpsToARPosition(userLocation: CLLocation, poiLocation: CLLocation) -> SIMD3<Float>? {
+                        // Calculate distance between user and POI
+                        let distance = Float(userLocation.distance(from: poiLocation))
+                        
+                        // If POI is too far away, don't show it
+                        if distance > 100 { // Maximum 100 meters
+                            return nil
+                        }
+                        
+                        // Calculate bearing between user and POI
+                        let bearing = getBearingBetween(userLocation, poiLocation)
+                        
+                        // Calculate X and Z coordinates (horizontal plane)
+                        // X is east-west, Z is north-south in AR coordinate system
+                        let x = distance * sin(bearing)
+                        let z = -distance * cos(bearing) // Negative because AR's Z axis points south
+                        
+                        // Calculate Y (vertical) based on altitude difference
+                        let altitudeDifference = Float(poiLocation.altitude - userLocation.altitude)
+                        print(poiLocation.altitude)
+                        print(userLocation.altitude)
+                        print("Alt Dif")
+                        print(altitudeDifference)
+                        
+                        // Return 3D position vector
+                        return SIMD3<Float>(x, altitudeDifference, z)
+                    }
+            //now something that deals with the angles, thankfully the ai actually knows how to do this math
+            func getBearingBetween(_ startLocation: CLLocation, _ endLocation: CLLocation) -> Float {
+                        // Convert lat/long to radians
+                        let lat1 = Float(startLocation.coordinate.latitude * .pi / 180)
+                        let lon1 = Float(startLocation.coordinate.longitude * .pi / 180)
+                        let lat2 = Float(endLocation.coordinate.latitude * .pi / 180)
+                        let lon2 = Float(endLocation.coordinate.longitude * .pi / 180)
+                        
+                        // Calculate bearing
+                        let dLon = lon2 - lon1
+                        let y = sin(dLon) * cos(lat2)
+                        let x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon)
+                        var bearing = atan2(y, x)
+                        
+                        // Convert to positive angle if needed
+                        if bearing < 0 {
+                            bearing += 2 * .pi
+                        }
+                        
+                        return bearing
+                    }
+            
+            
+            
+            
+            
+            
+            func createOrb(in arView: ARView) -> Entity{
+                print("In orb maker")
+                
+                // Create a orb model
+                
+                //ok so via debugging for some reason the generate orb thing is not working but the generate cube is working
+                let model = ModelEntity(mesh: MeshResource.generateBox(size: 0.2, cornerRadius: 0.005)) //makes a sphere with a radius of 1.5
+                let material = SimpleMaterial(color: .blue, roughness: 0.15, isMetallic: true) //makes it blue and metallic
+                model.model?.materials = [material]
+                
+                
+                model.generateCollisionShapes(recursive: true) //need this so that the orb acutally gets hit by taps
+                
+                // Create horizontal plane anchor
+                let anchor = AnchorEntity(plane: .horizontal)
+                
+                let orbPos = gpsToARPosition(userLocation: mainLoc!, poiLocation: orbCoords2!)
+                model.position = orbPos! //sets the model .1 meter in the sky and .5 to the right
+                model.name = "Mr.Orb" //names the orb
+                
+                anchor.addChild(model) //adds the orb to the anchor
+                
+                arView.scene.addAnchor(anchor) //adds the anchor to the ar view
+                
+                
+                
+                //more debugging
+                print("orb added at \(model.position)")
+                print("anchorOrb added \(anchor.position)")
+                
+                
+                return model
+                
+                
+                
+                
+            }
+            
+            //maybe the way to do this is put this into this function and pretty much when we have deteremind that a cube was not tapped on we do the scan thingy
+            
+            //helper function that will be called if the tap hit nothing
+            func scanForObjects(){
+                        //so first want to get the users current location, i think this is constantly running in the background
+                        //maybe i can call the gps to ar position thing but maybe not and can just use the basic given lat and longitude
+                let distFromCube = Float(((mainLoc?.distance(from: cubeCoords2!))!)) //not sure if this work and give the distance from the cube but it does not hurt
+                print(distFromCube) //testing this stuff just a bit
+                //looks like this very janky code actually works the errors with getting the user location might cause some issues but im going to run with it for now
+                let distFromOrb = Float((((mainLoc?.distance(from: orbCoords2!))!)))
+                let distFromCone = Float(((((mainLoc?.distance(from: coneCoords2!))!))))
+                //so we should have the distance from all the objects
+                print(distFromOrb) //debugging
+                print(distFromCone) //debugging
+                
+                //now for the real madness
+                //what if i make an if statment and if the user is within the distance limit i then call the create object function
+                //this is a very janky way of doing this but we will see if it works
+                //will have a different if statement for each object
+                if distFromOrb < 10{
+                    //we now make the orb if we are in the distance
+                    
+                }
+                    }
             
             
             //the actual cube tap function
@@ -223,6 +356,7 @@ struct RealityViewWithTap: UIViewRepresentable {
                 //just a check to see if anything was captured in the tap
                 if tapResult.isEmpty{
                     print("nothing tapped")
+                    scanForObjects()
                     return
                 }
                 
@@ -397,6 +531,7 @@ struct RealityViewWithTap: UIViewRepresentable {
             
             
         }
+         
         
         //create cone,
         
