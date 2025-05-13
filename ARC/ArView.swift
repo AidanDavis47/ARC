@@ -24,11 +24,23 @@ import CoreLocationUI
 
 
 /* CURRENTLY DEALING WITH STUFF BEING NESTED WITHIN EACHOTHER*/
+/* ALSO FOR SOME REASON THE CUBES ARE NOT BEING PLACED IN THE LOCATION I WANT WILL NEED TO WORK ON THIS ASWELL*/
 
 
 
 //CURRENTLY WE HAVE TWO COORDINATORS, ONE FOR THE CUBE AND ONE FOR THE ORB
 //the orb coordinator is coordinator orb (real good naming convention) if this does not work will want to maybe ask ai on how to have multiple objects with a same coordinator that actually works
+
+
+
+/* WHEN CHANGING LOCATIONS ALSO HAVE TO CHANGE THE SECONDARY COORDS DUE TO THE WEIRD SPAGHETTI CODE I HAVE WRITTEN, CAN GET COORDINATES BASED OFF CONSOLE OUTPUTS
+ IF YOUR LOCATIONS ARE TOO FAR APP WILL CRASH
+ 
+ 
+ 
+ */
+
+//GOT CUBE DISTANCE STUFF WORKING, COORDS ARE STILL OFF AND CUBES CAN BE INFINITLY CREATED IF THEY WERE NOT MADE AT START
 
 
 
@@ -43,9 +55,6 @@ struct RealityViewWithTap: UIViewRepresentable {
     @Binding var coneEntity: Entity? //var to keep track of the cone entity
     @Binding var score: Int? //var for keeping track of the score
     @Binding var inventory : Array<Any>? //var for keep track of items that have been picked up
-    //@Binding var cubeCoords2 : CLLocation?
-    //@Binding var orbCoords2 : CLLocation?
-    //@Binding var coneCoords2: CLLocation?
     
     //these are just the fixed locatoin for one of the cubes, the one in the front row of the class room
     var fixedLocationOneLat = 47.75391819
@@ -99,52 +108,165 @@ struct RealityViewWithTap: UIViewRepresentable {
     
     //turns out if distances are to far we get a nil value and your phone explodes
     
-    var homeCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75391312 , longitude: -117.41612673), altitude: 588.2369567041552, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+    var homeCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.63730776 , longitude: -117.42897956), altitude: 661.4756752904505, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
     
-     var orbCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75401628, longitude: -117.41595848), altitude: 584.0630307989195, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+     var orbCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.63721840, longitude: -117.42898652), altitude: 665.6621078665383, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
     
-     var coneCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75400978, longitude: -117.41619563), altitude: 585.0755367605016, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+     var coneCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.63728471, longitude: -117.42908024), altitude: 665.6621078665383, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
     
-    /*
-     var nameofobjCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: , longtitude: ), altitude: , horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
-     
-     
-     
-     
-     */
-    /*
-    //this function is for getting the difference between the users locatoin and the fixed location of the cube
-    func getCoordinateDifferences(lat : Double, long : Double, alt : Double){
-        print("in coordinate difference")
-        var curlat : Double = mainlat //hopefully will carry the coordinate from the first screen to this one
-        print(curlat) //just for debugging
-        var curlong: Double = mainLong
-        var curAlt : Double = mainAlt
-        print(curlong)
-        print(curAlt)
+    
+    
+    
+
+        class Coordinator: NSObject { //create a coordinator that handles the cube and its functions
+            
+            var parent: RealityViewWithTap
+            var currentCubeEntity: Entity?
+            var currentOrbEntity: Entity?
+            var currentConeEntity: Entity?
+            var score: Int?
+            var inventory: Array<Any>?
+            var cubeCoords2: CLLocation?
+            var orbCoords2: CLLocation?
+            var coneCoords2: CLLocation?
+            var currentARView: ARView?
+            
+            
+            init(parent: RealityViewWithTap) { //initalize functoin
+                self.parent = parent
+                self.currentCubeEntity = nil
+                self.currentOrbEntity = nil
+                self.currentConeEntity = nil
+                self.score = 0
+                self.inventory = []
+                self.cubeCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.63730776 , longitude: -117.42897956), altitude: 661.4756752904505, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+                self.orbCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.63721840, longitude: -117.42898652), altitude: 665.6621078665383, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+                self.coneCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.63728471, longitude: -117.42908024), altitude: 665.6621078665383, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+            }
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            //maybe the way to do this is put this into this function and pretty much when we have deteremind that a cube was not tapped on we do the scan thingy
+            
+            //got help from claude with this to figure out how to integrate this with the already written code
+            //helper function that will be called if the tap hit nothing
+            func scanForObjects(in arView: ARView? = nil){
+                print("in scan")
+                
+                //error checking recommende by the AI overlords
+                guard let userLoc = mainLoc, let arView = arView ?? currentARView else{
+                    print("no user loc or ar view")
+                    return
+                }
+                        //so first want to get the users current location, i think this is constantly running in the background
+                        //maybe i can call the gps to ar position thing but maybe not and can just use the basic given lat and longitude
+                let distFromCube = Float(((mainLoc?.distance(from: cubeCoords2!))!)) //not sure if this work and give the distance from the cube but it does not hurt
+                print(distFromCube) //testing this stuff just a bit
+                //looks like this very janky code actually works the errors with getting the user location might cause some issues but im going to run with it for now
+                let distFromOrb = Float((((mainLoc?.distance(from: orbCoords2!))!)))
+                let distFromCone = Float(((((mainLoc?.distance(from: coneCoords2!))!))))
+                //so we should have the distance from all the objects
+               // print(distFromOrb) //debugging
+                //print(distFromCone) //debugging
+                
+                //now for the real madness
+                //what if i make an if statment and if the user is within the distance limit i then call the create object function
+                //this is a very janky way of doing this but we will see if it works
+                //will have a different if statement for each object
+                if distFromOrb < 10{ //if we are in the distance would follow this foundation for the other objects aswell
+                    print("in threshold for cube")
+                    let cube = parent.createCube(in: arView)
+                    self.currentCubeEntity = cube
+                    parent.cubeEntity = cube
+                    
+                }
+                    }
+            
+            
+            //the actual cube tap function
+            @objc func handleTap(_ sender: UITapGestureRecognizer) {
+                guard let content = sender.view as? ARView else { return }
+                print("in cube tapping function")
+                
+                
+                //get the location of the tap
+                let tapLoc = sender.location(in: content)
+                
+                print("TapLoc: \(tapLoc)") //debugging
+                
+                let tapResult = content.hitTest(tapLoc) //does a hit test to determine the coordinates of the tap
+                
+                //just a check to see if anything was captured in the tap
+                if tapResult.isEmpty{
+                    print("nothing tapped")
+                    scanForObjects(in: content)
+                    return
+                }
+                
+                
+                
+                
+                
+                
+                
+                //now a loop that goes through to determine if the cube was tapped
+                for hit in tapResult{
+                    let hitObject = hit.entity
+                    print("thing hit: \(hit.entity.name)") //used for debugging
+                    //check to see if we directly hit the cube
+                    /* */
+                    if let currentCubeEntity = self.currentCubeEntity, hitObject == currentCubeEntity{
+                        parent.increaseScore() //calls the increase score functoin
+                        parent.addItemToInventory(itemName: hit.entity.name) //should hopefully add the name of the item to the array
+                        print("cube hit") //debugging
+                        hit.entity.removeFromParent() //when hit remove the cube
+                        self.currentCubeEntity = nil
+                        //parent.cubeEntity = nil
+                        
+                        return
+                    }
+                    if let currentOrbEntity = self.currentOrbEntity, hitObject == currentOrbEntity{ //an if statement to determine what object has been hit
+                        parent.increaseScore()
+                        parent.addItemToInventory(itemName: hit.entity.name)
+                        print("orb hit")
+                        hit.entity.removeFromParent()
+                        self.currentOrbEntity = nil
+                    }
+                    
+                    if let currentConeEntity = self.currentConeEntity, hitObject == currentConeEntity{
+                        parent.increaseScore()
+                        parent.addItemToInventory(itemName: hit.entity.name)
+                        print("cone hit")
+                        hit.entity.removeFromParent()
+                        self.currentCubeEntity = nil
+                    }
+                    
+                    
+                    
+                }
+                
+                //final debug
+                print("cube was not hit")
+                
+                
+                
+                
+                
+                
+            }
+        }
         
-        //now we want to get the differences from each of the values
-        var latDif : Double = lat - curlat
-        var longDif : Double = long-curlong
-        var altDif : Double = alt-curAlt
-        print(latDif)
-        print(longDif)
-        print(altDif)
-        
-        //now with these differences want to convert it into meters so that we know where to place the cube now
-        var latDifMeter = latDif * 111111 //should hopefullt convert to meters
-        var longDifMeter = 111111 * longDif
-        //dont think i need to convert the altitude stuff just yet
-        print("differences in meters")
-        print(latDifMeter)
-        print(longDifMeter)
-        
-        //now want to put these coordinates into vars that i can then pass back into the cube creator
-    }
-   */
+        func makeCoordinator() -> Coordinator { //function that makes the actual coordinatior, this is currently the main coordinator and is connected to the cube
+            print("cube coordinator maker")
+            return Coordinator(parent: self)
+        }
     
-    //asked ai for help on a better way of getting coordinates for latitude and longitude
-    /*
     func gpsToARPosition(userLocation: CLLocation, poiLocation: CLLocation) -> SIMD3<Float>? {
                 // Calculate distance between user and POI
                 let distance = Float(userLocation.distance(from: poiLocation))
@@ -193,249 +315,23 @@ struct RealityViewWithTap: UIViewRepresentable {
                 
                 return bearing
             }
-     */
-    
-    
-
-        class Coordinator: NSObject { //create a coordinator that handles the cube and its functions
-            
-            var parent: RealityViewWithTap
-            var currentCubeEntity: Entity?
-            var currentOrbEntity: Entity?
-            var currentConeEntity: Entity?
-            var score: Int?
-            var inventory: Array<Any>?
-            var cubeCoords2: CLLocation?
-            var orbCoords2: CLLocation?
-            var coneCoords2: CLLocation?
-            
-            
-            init(parent: RealityViewWithTap) { //initalize functoin
-                self.parent = parent
-                self.currentCubeEntity = nil
-                self.currentOrbEntity = nil
-                self.currentConeEntity = nil
-                self.score = 0
-                self.inventory = []
-                self.cubeCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75391312 , longitude: -117.41612673), altitude: 588.2369567041552, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
-                self.orbCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75401628, longitude: -117.41595848), altitude: 584.0630307989195, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
-                self.coneCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75400978, longitude: -117.41619563), altitude: 585.0755367605016, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
-            }
-            
-            func gpsToARPosition(userLocation: CLLocation, poiLocation: CLLocation) -> SIMD3<Float>? {
-                        // Calculate distance between user and POI
-                        let distance = Float(userLocation.distance(from: poiLocation))
-                        
-                        // If POI is too far away, don't show it
-                        if distance > 100 { // Maximum 100 meters
-                            return nil
-                        }
-                        
-                        // Calculate bearing between user and POI
-                        let bearing = getBearingBetween(userLocation, poiLocation)
-                        
-                        // Calculate X and Z coordinates (horizontal plane)
-                        // X is east-west, Z is north-south in AR coordinate system
-                        let x = distance * sin(bearing)
-                        let z = -distance * cos(bearing) // Negative because AR's Z axis points south
-                        
-                        // Calculate Y (vertical) based on altitude difference
-                        let altitudeDifference = Float(poiLocation.altitude - userLocation.altitude)
-                        print(poiLocation.altitude)
-                        print(userLocation.altitude)
-                        print("Alt Dif")
-                        print(altitudeDifference)
-                        
-                        // Return 3D position vector
-                        return SIMD3<Float>(x, altitudeDifference, z)
-                    }
-            //now something that deals with the angles, thankfully the ai actually knows how to do this math
-            func getBearingBetween(_ startLocation: CLLocation, _ endLocation: CLLocation) -> Float {
-                        // Convert lat/long to radians
-                        let lat1 = Float(startLocation.coordinate.latitude * .pi / 180)
-                        let lon1 = Float(startLocation.coordinate.longitude * .pi / 180)
-                        let lat2 = Float(endLocation.coordinate.latitude * .pi / 180)
-                        let lon2 = Float(endLocation.coordinate.longitude * .pi / 180)
-                        
-                        // Calculate bearing
-                        let dLon = lon2 - lon1
-                        let y = sin(dLon) * cos(lat2)
-                        let x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon)
-                        var bearing = atan2(y, x)
-                        
-                        // Convert to positive angle if needed
-                        if bearing < 0 {
-                            bearing += 2 * .pi
-                        }
-                        
-                        return bearing
-                    }
-            
-            
-            
-            
-            
-            
-            func createOrb(in arView: ARView) -> Entity{
-                print("In orb maker")
-                
-                // Create a orb model
-                
-                //ok so via debugging for some reason the generate orb thing is not working but the generate cube is working
-                let model = ModelEntity(mesh: MeshResource.generateBox(size: 0.2, cornerRadius: 0.005)) //makes a sphere with a radius of 1.5
-                let material = SimpleMaterial(color: .blue, roughness: 0.15, isMetallic: true) //makes it blue and metallic
-                model.model?.materials = [material]
-                
-                
-                model.generateCollisionShapes(recursive: true) //need this so that the orb acutally gets hit by taps
-                
-                // Create horizontal plane anchor
-                let anchor = AnchorEntity(plane: .horizontal)
-                
-                let orbPos = gpsToARPosition(userLocation: mainLoc!, poiLocation: orbCoords2!)
-                model.position = orbPos! //sets the model .1 meter in the sky and .5 to the right
-                model.name = "Mr.Orb" //names the orb
-                
-                anchor.addChild(model) //adds the orb to the anchor
-                
-                arView.scene.addAnchor(anchor) //adds the anchor to the ar view
-                
-                
-                
-                //more debugging
-                print("orb added at \(model.position)")
-                print("anchorOrb added \(anchor.position)")
-                
-                
-                return model
-                
-                
-                
-                
-            }
-            
-            //maybe the way to do this is put this into this function and pretty much when we have deteremind that a cube was not tapped on we do the scan thingy
-            
-            //helper function that will be called if the tap hit nothing
-            func scanForObjects(){
-                        //so first want to get the users current location, i think this is constantly running in the background
-                        //maybe i can call the gps to ar position thing but maybe not and can just use the basic given lat and longitude
-                let distFromCube = Float(((mainLoc?.distance(from: cubeCoords2!))!)) //not sure if this work and give the distance from the cube but it does not hurt
-                print(distFromCube) //testing this stuff just a bit
-                //looks like this very janky code actually works the errors with getting the user location might cause some issues but im going to run with it for now
-                let distFromOrb = Float((((mainLoc?.distance(from: orbCoords2!))!)))
-                let distFromCone = Float(((((mainLoc?.distance(from: coneCoords2!))!))))
-                //so we should have the distance from all the objects
-                print(distFromOrb) //debugging
-                print(distFromCone) //debugging
-                
-                //now for the real madness
-                //what if i make an if statment and if the user is within the distance limit i then call the create object function
-                //this is a very janky way of doing this but we will see if it works
-                //will have a different if statement for each object
-                if distFromOrb < 10{
-                    //we now make the orb if we are in the distance
-                    
-                }
-                    }
-            
-            
-            //the actual cube tap function
-            @objc func handleTap(_ sender: UITapGestureRecognizer) {
-                guard let content = sender.view as? ARView else { return }
-                print("in cube tapping function")
-                
-                
-                //get the location of the tap
-                let tapLoc = sender.location(in: content)
-                
-                print("TapLoc: \(tapLoc)") //debugging
-                
-                let tapResult = content.hitTest(tapLoc) //does a hit test to determine the coordinates of the tap
-                
-                //just a check to see if anything was captured in the tap
-                if tapResult.isEmpty{
-                    print("nothing tapped")
-                    scanForObjects()
-                    return
-                }
-                
-                
-                //guards for checking to see if the objects exist to be compared to
-                
-                guard let cubeEntity = self.currentCubeEntity else{ //checks to see if there is even a cube to tap
-                    print("nothing to combare(Cube)")
-                    return
-                }
-                
-                guard let orbEntity = self.currentOrbEntity else{
-                    print("nothing to compare(orb)")
-                    return
-                }
-                
-                guard let coneEntity = self.currentConeEntity else{
-                    print("nothing to compare(cone")
-                    return
-                }
-                
-                
-                
-                
-                //now a loop that goes through to determine if the cube was tapped
-                for hit in tapResult{
-                    print("thing hit: \(hit.entity.name)") //used for debugging
-                    //check to see if we directly hit the cube
-                    /* */
-                    if hit.entity == cubeEntity{
-                        parent.increaseScore() //calls the increase score functoin
-                        parent.addItemToInventory(itemName: hit.entity.name) //should hopefully add the name of the item to the array
-                        print("cube hit") //debugging
-                        hit.entity.removeFromParent() //when hit remove the cube
-                        self.currentCubeEntity = nil
-                        //parent.cubeEntity = nil
-                        
-                        return
-                    }
-                    if hit.entity == orbEntity{ //an if statement to determine what object has been hit
-                        parent.increaseScore()
-                        parent.addItemToInventory(itemName: hit.entity.name)
-                        print("orb hit")
-                        hit.entity.removeFromParent()
-                        self.currentOrbEntity = nil
-                    }
-                    
-                    if hit.entity == coneEntity{
-                        parent.increaseScore()
-                        parent.addItemToInventory(itemName: hit.entity.name)
-                        print("cone hit")
-                        hit.entity.removeFromParent()
-                        self.currentCubeEntity = nil
-                    }
-                    
-                    
-                    
-                }
-                
-                //final debug
-                print("cube was not hit")
-                
-                
-                
-                
-                
-                
-            }
-        }
-        
-        func makeCoordinator() -> Coordinator { //function that makes the actual coordinatior, this is currently the main coordinator and is connected to the cube
-            print("cube coordinator maker")
-            return Coordinator(parent: self)
-        }
-    
     
         //function that makes the ar view so that we can use tap recognizers in ar
         func makeUIView(context: Context) -> ARView {
+            //need to add a location tracker for the user in this scene aswell, tbh i think i could somehow use the one from the main view but that might be to hard to do with so little time
+            let tracker = CLLocationManager()
+            tracker.delegate = context.coordinator
+            tracker.desiredAccuracy = kCLLocationAccuracyBest //want to best accuracy possible for this, may need to tweak this depending on if the accuracy is changing too much
+            tracker.requestWhenInUseAuthorization() //get authorization
+            tracker.startUpdatingLocation() //start tracking the user
+            
+            
+            
+            
+            
+            
             let arView = ARView(frame: .zero) //create arvies
+            context.coordinator.currentARView = arView
             
             // Set up the AR session and configure it how we want
             let configuration = ARWorldTrackingConfiguration()
@@ -460,6 +356,7 @@ struct RealityViewWithTap: UIViewRepresentable {
             
             //add a wait so cube does not appear before plane had a little bit of issues where the cube would appear first and not be on the right plane
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0){
+                /*
                 
                 let modelCube = self.createCube(in: arView) //creates the cube in the view
                 let modelOrb = self.createOrb(in: arView) //creates the orb in the view
@@ -470,6 +367,52 @@ struct RealityViewWithTap: UIViewRepresentable {
                 self.cubeEntity = modelCube
                 self.orbEntity = modelOrb
                 self.coneEntity = modelCone
+                 */
+                if let userLoc = mainLoc{
+                    //check distances
+                    let cubeDist = Float(userLoc.distance(from: coordinator.cubeCoords2!))
+                    let orbDist = Float(userLoc.distance(from: coordinator.orbCoords2!))
+                    let coneDist = Float(userLoc.distance(from: coordinator.coneCoords2!))
+                    
+                    //debugging
+                    //print(cubeDist)
+                    //print(orbDist)
+                    //print(coneDist)
+                    
+                    
+                    //now create any objects that are in the distance threshold
+                    if cubeDist < 10{
+                        print("Cube in dist creating")
+                        let modelCube = self.createCube(in: arView)
+                        coordinator.currentCubeEntity = modelCube
+                        self.cubeEntity = modelCube
+                    }
+                    
+                    if orbDist < 10{
+                        print("Orb in dist creating")
+                        let modelOrb = self.createOrb(in: arView)
+                        coordinator.currentOrbEntity = modelOrb
+                        self.orbEntity = modelOrb
+                    }
+                    
+                    if coneDist < 10{
+                        print("Cone in dist creating")
+                        let modelCone = self.createCone(in: arView)
+                        coordinator.currentConeEntity = modelCone
+                        self.coneEntity = modelCone
+                    }
+                }else{
+                    //if we dont have the users location
+                    print("User loc unknown")
+                }
+                
+                //auto update for objects did not know this was a thing that could be done, pretty cool
+                
+                /* not needed currently
+                Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true){
+                    timer in coordinator.scanForObjects()
+                }
+                */
                 
                 
                 
@@ -511,7 +454,7 @@ struct RealityViewWithTap: UIViewRepresentable {
             let anchor = AnchorEntity(plane: .horizontal)
             
             let orbPos = gpsToARPosition(userLocation: mainLoc!, poiLocation: orbCoords)
-            model.position = orbPos! //sets the model .1 meter in the sky and .5 to the right
+            model.position = orbPos! //sets the model position hopefully in the given coordinate location
             model.name = "Mr.Orb" //names the orb
             
             anchor.addChild(model) //adds the orb to the anchor
@@ -659,6 +602,33 @@ struct RealityViewWithTap: UIViewRepresentable {
             return true
         }
     }
+
+
+    //extension to the coordinator so that it conforms to the location tracking stuff
+extension RealityViewWithTap.Coordinator: CLLocationManagerDelegate{
+    func locationManager(_ manager: CLLocationManager, didUpdateLoc locs: [CLLocation]){
+        guard let loc = locs.last else {return}
+        
+        //update location
+        mainLoc = loc
+        
+        //debugging
+        print("Cur loc \(loc.coordinate.latitude)")
+        
+        //now we check to see if the user is in the distance threshold
+        DispatchQueue.main.async {
+            if let arView = self.currentARView{
+                self.scanForObjects(in: arView)
+            }
+        }
+    }
+    
+    //error function
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error){
+        print("Location manager error: \(error.localizedDescription)")
+    }
+}
+
 /*
     extension RealityViewWithTap.CoordinatorOrb: UIGestureRecognizerDelegate{
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimul: UIGestureRecognizer) -> Bool{

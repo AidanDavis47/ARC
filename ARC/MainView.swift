@@ -54,8 +54,8 @@ class GPSGrabber:NSObject, ObservableObject, CLLocationManagerDelegate{
             mainAlt = location.altitude
             
             
-            print(curLoc) //want to get the location and see if we also get elevatoin
-            print(location.altitude) //prints the altitude as well
+            //print(curLoc) //want to get the location and see if we also get elevatoin
+            //print(location.altitude) //prints the altitude as well
             
             coord = location.coordinate.latitude
             
