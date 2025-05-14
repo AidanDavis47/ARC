@@ -108,11 +108,11 @@ struct RealityViewWithTap: UIViewRepresentable {
     
     //turns out if distances are to far we get a nil value and your phone explodes
     
-    var homeCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.63730776 , longitude: -117.42897956), altitude: 661.4756752904505, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+    var homeCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75391312 , longitude: -117.41612673), altitude: 588.2369567041552, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
     
-     var orbCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.63721840, longitude: -117.42898652), altitude: 665.6621078665383, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+     var orbCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75401628, longitude: -117.41595848), altitude: 665.6621078665383, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
     
-     var coneCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.63728471, longitude: -117.42908024), altitude: 665.6621078665383, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+     var coneCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75400978, longitude: -117.41619563), altitude: 585.0755367605016, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
     
     
     
@@ -139,9 +139,9 @@ struct RealityViewWithTap: UIViewRepresentable {
                 self.currentConeEntity = nil
                 self.score = 0
                 self.inventory = []
-                self.cubeCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.63730776 , longitude: -117.42897956), altitude: 661.4756752904505, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
-                self.orbCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.63721840, longitude: -117.42898652), altitude: 665.6621078665383, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
-                self.coneCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.63728471, longitude: -117.42908024), altitude: 665.6621078665383, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+                self.cubeCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75391312 , longitude: -117.41612673), altitude: 588.2369567041552, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+                self.orbCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75401628, longitude: -117.41595848), altitude: 665.6621078665383, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+                self.coneCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75400978, longitude: -117.41619563), altitude: 585.0755367605016, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
             }
             
             

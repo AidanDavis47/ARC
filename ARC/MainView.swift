@@ -137,19 +137,17 @@ struct MainView : View{
         //if statment might work, pete said it might take a while for it to actually appear
         
         
-            Text("TEST MAIN SCREEN")
-            Text("Lat: \(locationGrabber.coord)")
+            //Text("TEST MAIN SCREEN")
+            //Text("Lat: \(locationGrabber.coord)")
                 
                
             
             NavigationView {
                 VStack{
-                    
-                    NavigationLink(destination: SecondView()) {
-                        //self.onAppear(){locationManager.checkLocationAuthorization()}
-                        Text("TEST") //this is mainly being used to debug the gps location junk
-                        
-                        //current bug where i am unable to actually move to the screen, maybe because it is set as a navigation link, might want to just make a button that replaces this view with the ar view stuff, will want to ask pete
+                    Image("startlogo")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .edgesIgnoringSafeArea(.all)
                         NavigationLink(destination: ArView()){
                             Text("AR Screen")
                         }
@@ -162,7 +160,7 @@ struct MainView : View{
             }
         
     }
-}
+
             
             
             
