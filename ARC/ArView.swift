@@ -73,6 +73,8 @@ struct RealityViewWithTap: UIViewRepresentable {
     
     
     
+    
+    
     /* Coord List
      
      home:
@@ -132,6 +134,11 @@ struct RealityViewWithTap: UIViewRepresentable {
             var currentARView: ARView?
             
             
+            var cubeMade = false
+            var orbMade = false
+            var coneMade = false
+            
+            
             init(parent: RealityViewWithTap) { //initalize functoin
                 self.parent = parent
                 self.currentCubeEntity = nil
@@ -179,12 +186,27 @@ struct RealityViewWithTap: UIViewRepresentable {
                 //what if i make an if statment and if the user is within the distance limit i then call the create object function
                 //this is a very janky way of doing this but we will see if it works
                 //will have a different if statement for each object
-                if distFromOrb < 10{ //if we are in the distance would follow this foundation for the other objects aswell
+                if distFromCube < 30 && cubeMade == false{ //if we are in the distance would follow this foundation for the other objects aswell
                     print("in threshold for cube")
                     let cube = parent.createCube(in: arView)
                     self.currentCubeEntity = cube
                     parent.cubeEntity = cube
+                    cubeMade = true //make it so that a cube cannot be made again
                     
+                }
+                
+                if distFromOrb < 30 && orbMade == false{
+                    let orb = parent.createOrb(in: arView)
+                    self.currentOrbEntity = orb
+                    parent.orbEntity = orb
+                    orbMade = true
+                }
+                
+                if distFromCone < 30 && coneMade == false{
+                    let cone = parent.createCone(in: arView)
+                    self.currentConeEntity = cone
+                    parent.coneEntity = cone
+                    coneMade = true
                 }
                     }
             
@@ -386,6 +408,7 @@ struct RealityViewWithTap: UIViewRepresentable {
                         let modelCube = self.createCube(in: arView)
                         coordinator.currentCubeEntity = modelCube
                         self.cubeEntity = modelCube
+                        
                     }
                     
                     if orbDist < 10{
