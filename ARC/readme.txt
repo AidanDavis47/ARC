@@ -35,7 +35,51 @@ TO DO BY APRIL 23:
 
 TO DO LIST IN ORDER:
 1. multiple objects appear on screen, currently being worked on having a bit of trouble figuring out how we are seperating objects, for some reason cubes can appear but when i try other objects they do not appear for some odd reason
+    
+    currently it is calling the cube specific tapping function and not the orb tapping function maybe something with the coordinators?
+
+
+
+
+
+
+
 2.  XX add score tracking, basic function done, remember when calling the function sometimes it has to be parent.increaseScore()
 3.  XX keep track of what objects are picked up, this is currently completed at the moment
 4.  XX get coordinate junk debuged got this figured out so far derek was able to trouble shoot it luckily
 5. work on the database stuff
+
+
+
+plans for before demo:
+get fixed location working
+maybe get it so items are blocked by structures
+
+
+coords for first row in class room:47.75391312,-117.41612673   ALT: 588.2369567041552
+latitude = 111,111 meters
+longitude = 111,111 * cos(latitude)
+
+so plan for placing objects in fixed location is given the users coordinates and alitidue we figure out where to place the object based off the relative location of the phone and the distance from the fixed location
+
+so like for latitude and longitude we do fixed location minus relative location of the phone, same for altitude and then from that we have how far from the phone we want to place the object
+
+will want to convert from lat and long units to meters maybe
+
+Home table coords
++47.63730776,-117.42897956 ALT:661.4756752904505
+
+
+upstairs room coords
++47.63721840,-117.42898652, ALT:662.7344210334122
+
+
+backyard coords
++47.63728471,-117.42908024, ALT:665.6621078665383
+
+
+
+TO DO BEFORE PRESENTATION:
+1. TRY TO MAKE THE USER LOCATION A LITTLE BIT MORE ACCURATE (Got this working to atleast within 2 meters which is better may want to grab coordinates of locations again because they probably were slightly off)
+2. MAKE INVISIBLE WALLS TO BLOCK OBJECTS SO THEY ARE NOT SEEN THROUGH WALLS (Dereks idea of that the user has to tap to scan the area to see if they are within a certain distance of the object so i want to implement this abit) this probably would mean we want to make a new function such as scan area or something, can probably use a tap function caller
+3. THE MYTHICAL CONNECTION TO OTHER PHONE PROBLEM

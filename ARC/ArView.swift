@@ -9,6 +9,8 @@
 import SwiftUI
 import RealityKit
 import ARKit
+import CoreLocation
+import CoreLocationUI
 
 
 //for keeping track of items i think the best thing is to create an array and then whenever an object is tapped we move the objects name? to the array and then we can output what objects we have gathered when a user wants to maybe
@@ -21,8 +23,25 @@ import ARKit
 //ONLY ABLE TO ACESS THIS SCREEN FULL WHEN WE SET IT AS CONTENT VIEW IN APP DELEGATE, UNSURE WHY BUT WILL WORK ON IT WHEN ABLE TO, it fixed itself somehow not sure, want to keep an eye on this
 
 
+/* CURRENTLY DEALING WITH STUFF BEING NESTED WITHIN EACHOTHER*/
+/* ALSO FOR SOME REASON THE CUBES ARE NOT BEING PLACED IN THE LOCATION I WANT WILL NEED TO WORK ON THIS ASWELL*/
+
+
 
 //CURRENTLY WE HAVE TWO COORDINATORS, ONE FOR THE CUBE AND ONE FOR THE ORB
+//the orb coordinator is coordinator orb (real good naming convention) if this does not work will want to maybe ask ai on how to have multiple objects with a same coordinator that actually works
+
+
+
+/* WHEN CHANGING LOCATIONS ALSO HAVE TO CHANGE THE SECONDARY COORDS DUE TO THE WEIRD SPAGHETTI CODE I HAVE WRITTEN, CAN GET COORDINATES BASED OFF CONSOLE OUTPUTS
+ IF YOUR LOCATIONS ARE TOO FAR APP WILL CRASH
+ 
+ 
+ 
+ */
+
+//GOT CUBE DISTANCE STUFF WORKING, COORDS ARE STILL OFF AND CUBES CAN BE INFINITLY CREATED IF THEY WERE NOT MADE AT START
+
 
 
 // Custom UIViewRepresentable for RealityKit to add gesture recognizer
@@ -36,107 +55,71 @@ struct RealityViewWithTap: UIViewRepresentable {
     @Binding var coneEntity: Entity? //var to keep track of the cone entity
     @Binding var score: Int? //var for keeping track of the score
     @Binding var inventory : Array<Any>? //var for keep track of items that have been picked up
+    
+    //these are just the fixed locatoin for one of the cubes, the one in the front row of the class room
+    var fixedLocationOneLat = 47.75391819
+    var fixedLocatoinOneLong = -117.41612819
+    var fixedLocationOneAlt = 588.2369567041552
+    
+    //fixed locations for testing at home
+    var fixedLocationHomeLat = 47.63730776
+    var fixedLocationHomeLong = -117.42897956
+    var fixedLocationhomeAlt = 661.4756752904505
+    
+    var cubelocationhorizontalOne : Double = 0
+    var cubeLocationVertical : Double = 0
+    var cubelocationhorizontalTwo : Double = 0
+    
+    
+    
+    
+    
+    
+    /* Coord List
+     
+     home:
+     Home table coords
+     +47.63730776,-117.42897956 ALT:661.4756752904505
 
+
+     upstairs room coords
+     +47.63721840,-117.42898652, ALT:662.7344210334122
+
+
+     backyard coords
+     +47.63728471,-117.42908024, ALT:665.6621078665383
+     
+     
+     school:
+     coords for first row in class room:47.75391312,-117.41612673   ALT: 588.2369567041552
+     
+     
+     random guesses for coordinates in this room:
+     47.75401420,-117.41622780    ALT: 588.2369567041552
+     
+     Trophy Coordinates
+     47.75401628,-117.41595848, ALT: 584.0630307989195
+     
+     
+     Rock Coordinates
+     47.75400978,-117.41619563, ALT: 585.0755367605016
+     
+     
+     
+     */
+    
+    //turns out if distances are to far we get a nil value and your phone explodes
+    
+    var homeCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75391312 , longitude: -117.41612673), altitude: 588.2369567041552, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+    
+     var orbCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75401628, longitude: -117.41595848), altitude: 665.6621078665383, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+    
+     var coneCoords = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75400978, longitude: -117.41619563), altitude: 585.0755367605016, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
     
     
-    //create a coordinator for the orb maybe
-    class CoordinatorOrb: NSObject{
-        var parent: RealityViewWithTap
-        var currentOrbEntity: Entity?
-        
-        
-        init(parent: RealityViewWithTap, currentOrbEntity: Entity? = nil) {
-            self.parent = parent
-            self.currentOrbEntity = nil
-        }
-        //the actual orb tap function copied from the cube code
-        @objc func handleTap(_ sender: UITapGestureRecognizer) {
-            guard let content = sender.view as? ARView else { return }
-            
-            
-            
-            //get the location of the tap
-            let tapLoc = sender.location(in: content)
-            
-            print("TapLoc: \(tapLoc)") //debugging
-            
-            let tapResult = content.hitTest(tapLoc) //does a hit test to determine the coordinates of the tap
-            
-            //just a check to see if anything was captured in the tap
-            if tapResult.isEmpty{
-                print("nothing tapped")
-                return
-            }
-            
-            
-            //guards for checking to see if the objects exist to be compared to
-            
-            
-            guard let orbEntity = self.currentOrbEntity else{
-                print("notthing to compare (orb)")
-                return
-            }
-            
-            
-            
-            
-            //now a loop that goes through to determine if the cube was tapped
-            for hit in tapResult{
-                print("thing hit: \(hit.entity.name)") //used for debugging
-                //check to see if we directly hit the cube
-                /* */
-                if hit.entity == orbEntity{
-                    parent.increaseScore() //calls the increase score functoin
-                    parent.addItemToInventory(itemName: hit.entity.name) //should hopefully add the name of the item to the array
-                    print("cube hit") //debugging
-                    hit.entity.removeFromParent() //when hit remove the cube
-                    self.currentOrbEntity = nil
-                    //parent.cubeEntity = nil
-                    
-                    return
-                }
-                
-                
-                //secondary check to see if what we tapped was a child or parent of the cube not used
-                /*
-                if hit.entity.parent == orbEntity.parent{
-                    print("hit cube sibling")
-                    if let entityparent = hit.entity.parent{
-                        for child in entityparent.children{
-                            if child == orbEntity{ //if the cube is a sibling
-                                print("found cube")
-                                orbEntity.removeFromParent() //remove cube
-                                self.currentOrbEntity = nil //makes sure to remove cube
-                                //parent.cubeEntity = nil
-                                return
-                            }
-                        }
-                    }
-                    
-                }
-                
-                
-                /*
-                //check if cube is child not needed at the moment
-                if hit.entity.children.contains(where: {$0 == orbEntity}){
-                    print("cube is child")
-                    orbEntity.removeFromParent() //remove cube
-                    self.currentOrbEntity = nil
-                    //parent.cubeEntity = nil
-                    return
-                }
-                 */ */
-                
-            }
-            
-            //final debug
-            print("orb was not hit")
-            
-        }
-    }
-        
-        
-        
+    
+    
+
         class Coordinator: NSObject { //create a coordinator that handles the cube and its functions
             
             var parent: RealityViewWithTap
@@ -145,6 +128,16 @@ struct RealityViewWithTap: UIViewRepresentable {
             var currentConeEntity: Entity?
             var score: Int?
             var inventory: Array<Any>?
+            var cubeCoords2: CLLocation?
+            var orbCoords2: CLLocation?
+            var coneCoords2: CLLocation?
+            var currentARView: ARView?
+            
+            
+            var cubeMade = false
+            var orbMade = false
+            var coneMade = false
+            
             
             init(parent: RealityViewWithTap) { //initalize functoin
                 self.parent = parent
@@ -153,13 +146,75 @@ struct RealityViewWithTap: UIViewRepresentable {
                 self.currentConeEntity = nil
                 self.score = 0
                 self.inventory = []
+                self.cubeCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75391312 , longitude: -117.41612673), altitude: 588.2369567041552, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+                self.orbCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75401628, longitude: -117.41595848), altitude: 665.6621078665383, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
+                self.coneCoords2 = CLLocation(coordinate: CLLocationCoordinate2D(latitude: 47.75400978, longitude: -117.41619563), altitude: 585.0755367605016, horizontalAccuracy: 1.0, verticalAccuracy: 1.0, timestamp: Date())
             }
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            //maybe the way to do this is put this into this function and pretty much when we have deteremind that a cube was not tapped on we do the scan thingy
+            
+            //got help from claude with this to figure out how to integrate this with the already written code
+            //helper function that will be called if the tap hit nothing
+            func scanForObjects(in arView: ARView? = nil){
+                print("in scan")
+                
+                //error checking recommende by the AI overlords
+                guard let userLoc = mainLoc, let arView = arView ?? currentARView else{
+                    print("no user loc or ar view")
+                    return
+                }
+                        //so first want to get the users current location, i think this is constantly running in the background
+                        //maybe i can call the gps to ar position thing but maybe not and can just use the basic given lat and longitude
+                let distFromCube = Float(((mainLoc?.distance(from: cubeCoords2!))!)) //not sure if this work and give the distance from the cube but it does not hurt
+                print(distFromCube) //testing this stuff just a bit
+                //looks like this very janky code actually works the errors with getting the user location might cause some issues but im going to run with it for now
+                let distFromOrb = Float((((mainLoc?.distance(from: orbCoords2!))!)))
+                let distFromCone = Float(((((mainLoc?.distance(from: coneCoords2!))!))))
+                //so we should have the distance from all the objects
+               // print(distFromOrb) //debugging
+                //print(distFromCone) //debugging
+                
+                //now for the real madness
+                //what if i make an if statment and if the user is within the distance limit i then call the create object function
+                //this is a very janky way of doing this but we will see if it works
+                //will have a different if statement for each object
+                if distFromCube < 30 && cubeMade == false{ //if we are in the distance would follow this foundation for the other objects aswell
+                    print("in threshold for cube")
+                    let cube = parent.createCube(in: arView)
+                    self.currentCubeEntity = cube
+                    parent.cubeEntity = cube
+                    cubeMade = true //make it so that a cube cannot be made again
+                    
+                }
+                
+                if distFromOrb < 30 && orbMade == false{
+                    let orb = parent.createOrb(in: arView)
+                    self.currentOrbEntity = orb
+                    parent.orbEntity = orb
+                    orbMade = true
+                }
+                
+                if distFromCone < 30 && coneMade == false{
+                    let cone = parent.createCone(in: arView)
+                    self.currentConeEntity = cone
+                    parent.coneEntity = cone
+                    coneMade = true
+                }
+                    }
             
             
             //the actual cube tap function
             @objc func handleTap(_ sender: UITapGestureRecognizer) {
                 guard let content = sender.view as? ARView else { return }
-                
+                print("in cube tapping function")
                 
                 
                 //get the location of the tap
@@ -172,36 +227,23 @@ struct RealityViewWithTap: UIViewRepresentable {
                 //just a check to see if anything was captured in the tap
                 if tapResult.isEmpty{
                     print("nothing tapped")
+                    scanForObjects(in: content)
                     return
                 }
                 
                 
-                //guards for checking to see if the objects exist to be compared to
                 
-                guard let cubeEntity = self.currentCubeEntity else{ //checks to see if there is even a cube to tap
-                    print("nothing to combare(Cube)")
-                    return
-                }
                 
-                /*
-                 guard let orbEntity = self.currentOrbEntity else{
-                 print("notthing to compare (orb)")
-                 return
-                 }
-                 
-                 guard let coneEntity = self.currentConeEntity else{
-                 print("no compare cone")
-                 return
-                 }
-                 */
+                
                 
                 
                 //now a loop that goes through to determine if the cube was tapped
                 for hit in tapResult{
+                    let hitObject = hit.entity
                     print("thing hit: \(hit.entity.name)") //used for debugging
                     //check to see if we directly hit the cube
                     /* */
-                    if hit.entity == cubeEntity{
+                    if let currentCubeEntity = self.currentCubeEntity, hitObject == currentCubeEntity{
                         parent.increaseScore() //calls the increase score functoin
                         parent.addItemToInventory(itemName: hit.entity.name) //should hopefully add the name of the item to the array
                         print("cube hit") //debugging
@@ -211,36 +253,23 @@ struct RealityViewWithTap: UIViewRepresentable {
                         
                         return
                     }
-                    
-                    
-                    //secondary check to see if what we tapped was a child or parent of the cube not used
-                    /* */
-                    if hit.entity.parent == cubeEntity.parent{
-                        print("hit cube sibling")
-                        if let entityparent = hit.entity.parent{
-                            for child in entityparent.children{
-                                if child == cubeEntity{ //if the cube is a sibling
-                                    print("found cube")
-                                    cubeEntity.removeFromParent() //remove cube
-                                    self.currentCubeEntity = nil //makes sure to remove cube
-                                    //parent.cubeEntity = nil
-                                    return
-                                }
-                            }
-                        }
-                        
+                    if let currentOrbEntity = self.currentOrbEntity, hitObject == currentOrbEntity{ //an if statement to determine what object has been hit
+                        parent.increaseScore()
+                        parent.addItemToInventory(itemName: hit.entity.name)
+                        print("orb hit")
+                        hit.entity.removeFromParent()
+                        self.currentOrbEntity = nil
                     }
                     
-                    
-                    /* */
-                    //check if cube is child not needed at the moment
-                    if hit.entity.children.contains(where: {$0 == cubeEntity}){
-                        print("cube is child")
-                        cubeEntity.removeFromParent() //remove cube
+                    if let currentConeEntity = self.currentConeEntity, hitObject == currentConeEntity{
+                        parent.increaseScore()
+                        parent.addItemToInventory(itemName: hit.entity.name)
+                        print("cone hit")
+                        hit.entity.removeFromParent()
                         self.currentCubeEntity = nil
-                        //parent.cubeEntity = nil
-                        return
                     }
+                    
+                    
                     
                 }
                 
@@ -255,13 +284,76 @@ struct RealityViewWithTap: UIViewRepresentable {
             }
         }
         
-        func makeCoordinator() -> Coordinator { //function that makes the actual coordinatior
+        func makeCoordinator() -> Coordinator { //function that makes the actual coordinatior, this is currently the main coordinator and is connected to the cube
+            print("cube coordinator maker")
             return Coordinator(parent: self)
         }
-        
+    
+    func gpsToARPosition(userLocation: CLLocation, poiLocation: CLLocation) -> SIMD3<Float>? {
+                // Calculate distance between user and POI
+                let distance = Float(userLocation.distance(from: poiLocation))
+                
+                // If POI is too far away, don't show it
+                if distance > 100 { // Maximum 100 meters
+                    return nil
+                }
+                
+                // Calculate bearing between user and POI
+                let bearing = getBearingBetween(userLocation, poiLocation)
+                
+                // Calculate X and Z coordinates (horizontal plane)
+                // X is east-west, Z is north-south in AR coordinate system
+                let x = distance * sin(bearing)
+                let z = -distance * cos(bearing) // Negative because AR's Z axis points south
+                
+                // Calculate Y (vertical) based on altitude difference
+                let altitudeDifference = Float(poiLocation.altitude - userLocation.altitude)
+                print(poiLocation.altitude)
+                print(userLocation.altitude)
+                print("Alt Dif")
+                print(altitudeDifference)
+                
+                // Return 3D position vector
+                return SIMD3<Float>(x, altitudeDifference, z)
+            }
+    //now something that deals with the angles, thankfully the ai actually knows how to do this math
+    func getBearingBetween(_ startLocation: CLLocation, _ endLocation: CLLocation) -> Float {
+                // Convert lat/long to radians
+                let lat1 = Float(startLocation.coordinate.latitude * .pi / 180)
+                let lon1 = Float(startLocation.coordinate.longitude * .pi / 180)
+                let lat2 = Float(endLocation.coordinate.latitude * .pi / 180)
+                let lon2 = Float(endLocation.coordinate.longitude * .pi / 180)
+                
+                // Calculate bearing
+                let dLon = lon2 - lon1
+                let y = sin(dLon) * cos(lat2)
+                let x = cos(lat1) * sin(lat2) - sin(lat1) * cos(lat2) * cos(dLon)
+                var bearing = atan2(y, x)
+                
+                // Convert to positive angle if needed
+                if bearing < 0 {
+                    bearing += 2 * .pi
+                }
+                
+                return bearing
+            }
+    
         //function that makes the ar view so that we can use tap recognizers in ar
         func makeUIView(context: Context) -> ARView {
+            //need to add a location tracker for the user in this scene aswell, tbh i think i could somehow use the one from the main view but that might be to hard to do with so little time
+            let tracker = CLLocationManager()
+            tracker.delegate = context.coordinator
+            tracker.desiredAccuracy = kCLLocationAccuracyBest //want to best accuracy possible for this, may need to tweak this depending on if the accuracy is changing too much
+            tracker.requestWhenInUseAuthorization() //get authorization
+            tracker.startUpdatingLocation() //start tracking the user
+            
+            
+            
+            
+            
+            
             let arView = ARView(frame: .zero) //create arvies
+            context.coordinator.currentARView = arView
             
             // Set up the AR session and configure it how we want
             let configuration = ARWorldTrackingConfiguration()
@@ -272,26 +364,79 @@ struct RealityViewWithTap: UIViewRepresentable {
             arView.debugOptions = [.showFeaturePoints, .showWorldOrigin] //used for debugging the ar screen
             
             // Add tap gesture recognizer
-            let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:)))
+            let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap(_:))) //this is the main gesture handler for the app, it is currently only linked to the cube
+            //let tapGesterOrb = UITapGestureRecognizer(target: context.coordinator, action: #selector(CoordinatorOrb.handleTap(_:))) //gesture that is only linked to the orb
             tapGesture.cancelsTouchesInView = false
+            //tapGesterOrb.cancelsTouchesInView = false
             tapGesture.delegate = context.coordinator //creates a delegator
+            //tapGesterOrb.delegate = context.coordinator
             arView.addGestureRecognizer(tapGesture) //adds the tap gesture function to the gesture that are recognized in the ar view
-            
+            //arView.addGestureRecognizer(tapGesterOrb)
             arView.session.delegate = context.coordinator
             
             let coordinator = context.coordinator
             
             //add a wait so cube does not appear before plane had a little bit of issues where the cube would appear first and not be on the right plane
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0){
+                /*
+                
                 let modelCube = self.createCube(in: arView) //creates the cube in the view
                 let modelOrb = self.createOrb(in: arView) //creates the orb in the view
-                //let modelCone = self.createCone(in: arView) //creates the cone in the view
+                let modelCone = self.createCone(in: arView) //creates the cone in the view
                 coordinator.currentCubeEntity = modelCube //connect cube to the coordinator
                 coordinator.currentOrbEntity = modelOrb //connect the orb to the coordinator
-                //coordinator.currentConeEntity = modelCone //connect the cone to the coordinator
+                coordinator.currentConeEntity = modelCone //connect the cone to the coordinator
                 self.cubeEntity = modelCube
                 self.orbEntity = modelOrb
-                //self.coneEntity = modelCone
+                self.coneEntity = modelCone
+                 */
+                if let userLoc = mainLoc{
+                    //check distances
+                    let cubeDist = Float(userLoc.distance(from: coordinator.cubeCoords2!))
+                    let orbDist = Float(userLoc.distance(from: coordinator.orbCoords2!))
+                    let coneDist = Float(userLoc.distance(from: coordinator.coneCoords2!))
+                    
+                    //debugging
+                    //print(cubeDist)
+                    //print(orbDist)
+                    //print(coneDist)
+                    
+                    
+                    //now create any objects that are in the distance threshold
+                    if cubeDist < 10{
+                        print("Cube in dist creating")
+                        let modelCube = self.createCube(in: arView)
+                        coordinator.currentCubeEntity = modelCube
+                        self.cubeEntity = modelCube
+                        
+                    }
+                    
+                    if orbDist < 10{
+                        print("Orb in dist creating")
+                        let modelOrb = self.createOrb(in: arView)
+                        coordinator.currentOrbEntity = modelOrb
+                        self.orbEntity = modelOrb
+                    }
+                    
+                    if coneDist < 10{
+                        print("Cone in dist creating")
+                        let modelCone = self.createCone(in: arView)
+                        coordinator.currentConeEntity = modelCone
+                        self.coneEntity = modelCone
+                    }
+                }else{
+                    //if we dont have the users location
+                    print("User loc unknown")
+                }
+                
+                //auto update for objects did not know this was a thing that could be done, pretty cool
+                
+                /* not needed currently
+                Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true){
+                    timer in coordinator.scanForObjects()
+                }
+                */
+                
                 
                 
                 
@@ -306,7 +451,7 @@ struct RealityViewWithTap: UIViewRepresentable {
         func updateUIView(_ uiView: ARView, context: Context) {
             context.coordinator.currentCubeEntity = cubeEntity
             context.coordinator.currentOrbEntity = orbEntity
-            //context.coordinator.currentConeEntity = coneEntity
+            context.coordinator.currentConeEntity = coneEntity
         }
         
         
@@ -331,7 +476,8 @@ struct RealityViewWithTap: UIViewRepresentable {
             // Create horizontal plane anchor
             let anchor = AnchorEntity(plane: .horizontal)
             
-            model.position = [0.5, 0.1, 0] //sets the model .1 meter in the sky and .5 to the right
+            let orbPos = gpsToARPosition(userLocation: mainLoc!, poiLocation: orbCoords)
+            model.position = orbPos! //sets the model position hopefully in the given coordinate location
             model.name = "Mr.Orb" //names the orb
             
             anchor.addChild(model) //adds the orb to the anchor
@@ -351,6 +497,7 @@ struct RealityViewWithTap: UIViewRepresentable {
             
             
         }
+         
         
         //create cone,
         
@@ -360,8 +507,8 @@ struct RealityViewWithTap: UIViewRepresentable {
             // Create a orb model
             
             //ok so via debugging for some reason the generate orb thing is not working but the generate cube is working
-            let model = ModelEntity(mesh: MeshResource.generateBox(size: 0.2, cornerRadius: 0.005)) //makes a cone
-            let material = SimpleMaterial(color: .brown, roughness: 0.15, isMetallic: true) //makes it brown and metallic
+            let model = ModelEntity(mesh: MeshResource.generateBox(size: 0.3, cornerRadius: 0.005)) //makes a cone
+            let material = SimpleMaterial(color: .green, roughness: 0.15, isMetallic: true) //makes it brown and metallic
             model.model?.materials = [material]
             
             
@@ -401,12 +548,12 @@ struct RealityViewWithTap: UIViewRepresentable {
         
         //create cube
         //i think the best way for making multiple objects is maybe making different functions for each object for now until i figure out how to automate all of this
-        func createCube(in arView: ARView) -> Entity {
+    func createCube(in arView: ARView) -> Entity {
             print("In cube maker")
-            
+            //getCoordinateDifferences(lat: fixedLocationHomeLat, long: fixedLocationHomeLong, alt: fixedLocationhomeAlt) //want to get coordinate differences
             
             // Create a cube model
-            let model = ModelEntity(mesh: MeshResource.generateBox(size: 0.1, cornerRadius: 0.005)) //makes a box with a size of .2 meters
+            let model = ModelEntity(mesh: MeshResource.generateBox(size: 0.9, cornerRadius: 0.005)) //makes a box with a size of .2 meters
             let material = SimpleMaterial(color: .red, roughness: 0.15, isMetallic: true) //makes it red and metallic
             model.model?.materials = [material]
             
@@ -416,8 +563,12 @@ struct RealityViewWithTap: UIViewRepresentable {
             // Create horizontal plane anchor
             let anchor = AnchorEntity(plane: .horizontal)
             
-            model.position = [0, 0.1, 0.0] //sets the model .1 meter in the sky
+            let arPOS = gpsToARPosition(userLocation: mainLoc!, poiLocation: homeCoords)
+            print(arPOS)
+        
+            model.position = arPOS! //sets the model .1 meter in the sky
             model.name = "Mr.Cube" //names the cube
+            
             
             anchor.addChild(model) //adds the cube to the anchor
             
@@ -425,27 +576,12 @@ struct RealityViewWithTap: UIViewRepresentable {
             
             
             
-            /*
-             //creating second cube DOES NOT WORK
-             print("cube 2 being made")
-             let model2 = ModelEntity(mesh: MeshResource.generateBox(size: 0.1, cornerRadius: 0.005))
-             let material2 = SimpleMaterial(color: .blue, roughness: 0.15, isMetallic: true)
-             model2.model?.materials = [material2]
-             
-             model2.generateCollisionShapes(recursive: true)
-             
-             let anchor2 = AnchorEntity(plane: .horizontal)
-             model2.position = [0,0.5,0]
-             model2.name = "Mrs.Cube"
-             
-             anchor2.addChild(model2)
-             */
+          
             
             //more debugging
             print("Cube added at \(model.position)")
             print("anchor added \(anchor.position)")
-            // print("Cube2 added at \(model2.position)")
-            //print("anchor2 added at \(anchor2.position)")
+          
             
             return model
         }
@@ -466,7 +602,8 @@ struct RealityViewWithTap: UIViewRepresentable {
         func addItemToInventory(itemName : String){
             print("add item to inventory")
             inventory?.append(itemName) //should hopefully just add the item to the array
-            print(inventory?.first)
+            //print(inventory?.first)
+            print(inventory)
         }
     }
     
@@ -490,6 +627,50 @@ struct RealityViewWithTap: UIViewRepresentable {
     }
 
 
+    //extension to the coordinator so that it conforms to the location tracking stuff
+extension RealityViewWithTap.Coordinator: CLLocationManagerDelegate{
+    func locationManager(_ manager: CLLocationManager, didUpdateLoc locs: [CLLocation]){
+        guard let loc = locs.last else {return}
+        
+        //update location
+        mainLoc = loc
+        
+        //debugging
+        print("Cur loc \(loc.coordinate.latitude)")
+        
+        //now we check to see if the user is in the distance threshold
+        DispatchQueue.main.async {
+            if let arView = self.currentARView{
+                self.scanForObjects(in: arView)
+            }
+        }
+    }
+    
+    //error function
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error){
+        print("Location manager error: \(error.localizedDescription)")
+    }
+}
+
+/*
+    extension RealityViewWithTap.CoordinatorOrb: UIGestureRecognizerDelegate{
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimul: UIGestureRecognizer) -> Bool{
+        return true
+        }
+    }
+*/
+
+
+//function for transfering gps coordinates to relative coordinates based off chat gpt code at the bottom of the page
+/*
+func convertgpsToArCoords(orgin: CLLocationCoordinate2D, dest: CLLocation) -> SCNVector3 {
+    //dont know exactly how to do this kind of following what the evil ai which i dont like but will see if it works
+    let distance = dest.distance(from: orgin)
+    let bearing = getBearing(from: origin.coordinate, to: destination.coordinate)
+    
+}
+ */
+
     struct ArView: View {
         
         @State private var cubeEntity: Entity? = nil // To keep track of the cube entity
@@ -504,269 +685,15 @@ struct RealityViewWithTap: UIViewRepresentable {
             RealityViewWithTap(  cubeEntity: $cubeEntity, orbEntity: $orbEntity, coneEntity: $coneEntity, score: $score, inventory: $inventory) //calls the reality view with tap struct
                 .onAppear {
                     
+                    
                 }
+                
                 .edgesIgnoringSafeArea(.all) //makes it full screen
-                .navigationBarBackButtonHidden() //hides the back arrow on the nav bar
+                //.navigationBarBackButtonHidden() //hides the back arrow on the nav bar
             
         }
     }
     
     
-    
-    //OLD UNUSED CODE KEEPING FOR REFERENCE
-    
-    
-    
-    /* moving this to the ui view representable
-    func createCube() {
-        print("In cube maker")
-        // Create a cube model
-        let model = Entity()
-        let mesh = MeshResource.generateBox(size: 0.1, cornerRadius: 0.005)
-        let material = SimpleMaterial(color: .gray, roughness: 0.15, isMetallic: true)
-        model.components.set(ModelComponent(mesh: mesh, materials: [material]))
-        model.position = [0, 0.05, 0]
-        
-        // Store the model in the state variable to track it
-        self.cubeEntity = model
-        
-        // Create horizontal plane anchor
-        let anchor = AnchorEntity(.plane(.horizontal, classification: .any, minimumBounds: SIMD2<Float>(0.2, 0.2)))
-        anchor.addChild(model)
-        
-        // Find the ARView and add the anchor
-        if let arVIEW = getarVIEW(){
-            arVIEW.scene.addAnchor(anchor)
-        } else {
-            print("Ar view is still not being found yipeee")
-        }
-    }
-     */
-    
-    
-    /* as usual the ai lied
-    //apparently we need a helper function to get the view where we are placing the cube, you could do this easier before ios 15 but that functionality got deprecated so chagpt said this is how you do it now
-    func getarVIEW() -> ARView?{
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene{
-            return scene.windows.first?.rootViewController?.view as? ARView
-        }
-        return nil
-    }
-     */
 
 
-
-
-/* old colde from the first attempt
- 
- struct ArView : View{
- 
- 
- @State var cube: ModelEntity? //vars that are for the cube and the anchor for the cube
- @State var anchor: AnchorEntity? //the @State lets me pass these vars into arViewPsuedo, will want to research why at some point
- 
- @State var ArVarView: ARView //creates a ar view variable
- 
- var body: some View{
- ArViewPsuedo(ArView: $ArVarView, cube: $cube, anchor: $anchor) //this is used to intergrate the actual ar view into the ui view because apparently in order to interact with objects both the ar view and ui view need to be integrated
- .edgesIgnoringSafeArea(.all)
- .onAppear{ //when the body appears we want to create the actual ar view, wonder why it is different compared to how the xcode template made it
- createARView()
- }
- }
- 
- //now the function for creating the ar view itself xcode just calls a reality view obeject while this way looks like it creates a "session" and runs it based off the configuration variable which is set to ar world configuration
- func createARView(){
- //create a configuration var which is declared as a ar configuration
- let config = ARWorldTrackingConfiguration()
- //now we create a session based off the config
- ArVarView.session.run(config)
- 
- 
- //now a helper function to add a cube to the screen, can probably modify this for when we want to add different objects and such
- 
- addCube()
- }
- 
- func addCube(){
- //from the xcode template
- let mesh = MeshResource.generateBox(size: 0.1, cornerRadius: 0.005)
- let material = SimpleMaterial(color: .gray, roughness: 0.15, isMetallic: true)
- 
- cube = ModelEntity(mesh: mesh, materials: [material]) //creates the cube itself
- 
- anchor = AnchorEntity(world: SIMD3(x: 0, y:0, z: -0.5)) //creates the anchor, could modify it for later for more random anchoring
- 
- anchor?.addChild(cube!) //connects the cube to the anchor
- 
- ArVarView.scene.addAnchor(anchor!) //adds the anchor to the actual view now
- 
- }
- 
- }
- 
- 
- //now the constructer for the pseudo ar view, the ai calls its an representable(not entirely sure what that means yet)
- //i wonder if there is a way to not have to integrate, i think the problem is that we are using structs and not classes
- //could probably redo if time
- struct ArViewPsuedo : UIViewRepresentable{
- @Binding var ArView: ARView
- @Binding var cube: ModelEntity?
- @Binding var anchor :AnchorEntity?
- //very interesting thing i found out is if you create an empty struct it will give an error saying that it does not conform to whatever protocol you are using, you can then ask it to fix it and it spits out these template functions and now it works,
- //for some reason it did not like the functions i made below these maybe because of the function name? good to know for the future
- 
- func makeUIView(context: Context) -> ARView {
- let ArView = ARView(frame: .zero) //creates the view
- 
- let config = ARWorldTrackingConfiguration()
- ArView.session.run(config)
- 
- 
- //now we create a gesture recognizer for the tap which is the whole point of these weird struct integrations
- let tapScreen = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tapHandler(_:)))
- ArView.addGestureRecognizer(tapScreen)
- 
- 
- 
- //now the view should update itself
- self.ArView = ArView
- return ArView
- }
- 
- 
- 
- func updateUIView(_ uiView: ARView, context: Context) {
- 
- }
- 
- typealias UIViewType = ARView //not sure exactly what this does but the error told me it need it to conform to the UI View protocol
- 
- func makeCoordinator() -> Coordinator {
- return Coordinator(cube: $cube, anchor: $anchor, ArView: ArView)
- }
- 
- 
- 
- 
- //now a function for making the actual view
- /*
-  func makeView(context: Context) -> ARView{
-  let ArView = ARView(frame: .zero) //creates the view
-  
-  let config = ARWorldTrackingConfiguration()
-  ArView.session.run(config)
-  
-  
-  //now we create a gesture recognizer for the tap which is the whole point of these weird struct integrations
-  let tapScreen = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tapHandler(_:)))
-  ArView.addGestureRecognizer(tapScreen)
-  
-  
-  
-  //now the view should update itself
-  self.ArView = ArView
-  return ArView
-  }
-  
-  
-  //apparently you need a update view function to conform to uiViewRepresntable, but we are not using it just yet so keep it empty?
-  
-  func updateView(_ uiView: ARView, context : Context){
-  
-  }
-  */
- 
- 
- //now apparently we make something called a coordinator which is what actually handles the tap recognization
- class Coordinator: NSObject{
- var cube: Binding<ModelEntity?>
- var anchor: Binding<AnchorEntity?>
- var ArView: ARView
- 
- 
- init(cube: Binding<ModelEntity?>, anchor: Binding<AnchorEntity?>, ArView: ARView!) {
- self.cube = cube
- self.anchor = anchor
- self.ArView = ArView
- }
- 
- 
- //the handler for the actual tap
- @objc func tapHandler(_ gesture: UIGestureRecognizer){
- //figure out where the screen was tapped
- let loc = gesture.location(in: ArView)
- 
- 
- //now we use a hit test function which already exists, pretty cool
- let test = ArView.hitTest(loc, query: .nearest, mask: .all)
- //if check to see if the tap was on the cube
- let tapLoc = test.first?.entity
- if tapLoc == cube.wrappedValue{ //if we tap on the cube
- cube.wrappedValue?.removeFromParent() //we remove it from the parent
- }
- 
- }
- }
- 
- 
- 
- 
- 
- }
- 
- 
- 
- 
- 
- 
- /* from the template that was made by xcode, does not work as wanted
-  struct Arview : UIViewRepresentable{
-  let tapScreen = UITapGestureRecognizer(target: self, action: #selector(cubeTap(_:)))
-  
-  
-  
-  var body: some View {
-  // this whole commented chunk is a template for the ar aspect, just keeping it around until we figure out how to switch screen modes
-  
-  
-  
-  RealityView { content in
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  // Create a cube model
-  let model = Entity()
-  
-  
-  
-  let mesh = MeshResource.generateBox(size: 0.1, cornerRadius: 0.005)
-  let material = SimpleMaterial(color: .gray, roughness: 0.15, isMetallic: true)
-  model.components.set(ModelComponent(mesh: mesh, materials: [material]))
-  model.position = [0, 0.05, 0]
-  
-  // Create horizontal plane anchor for the content
-  let anchor = AnchorEntity(.plane(.horizontal, classification: .any, minimumBounds: SIMD2<Float>(0.2, 0.2)))
-  anchor.addChild(model)
-  
-  
-  // Add the horizontal plane anchor to the scene
-  content.add(anchor)
-  content.camera = .spatialTracking
-  
-  
-  }
-  .edgesIgnoringSafeArea(.all)
-  .navigationBarBackButtonHidden(true)
-  
-  }
-  
-  }
-  */
- */
